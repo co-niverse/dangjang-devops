@@ -17,7 +17,7 @@ resource "aws_ecr_repository_policy" "prod" {
           tagStatus   = "any"
           countType   = "sinceImagePushed"
           countUnit   = "days"
-          countNumber = "${var.expiration_after_days}"
+          countNumber = var.expiration_after_days
         }
         action = {
           type = "expire"
