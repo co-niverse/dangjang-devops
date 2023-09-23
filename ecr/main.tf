@@ -8,23 +8,21 @@ resource "aws_ecr_repository" "prod" {
 
 resource "aws_ecr_repository_policy" "prod" {
   repository = aws_ecr_repository.prod.name
-  policy     = <<EOF
-{
-    "rules": [
-        {
-            "rulePriority": 1,
-            "description": "Keep last 30 images",
-            "selection": {
-                "tagStatus": "tagged",
-                "tagPrefixList": ["v"],
-                "countType": "imageCountMoreThan",
-                "countNumber": 30
-            },
-            "action": {
-                "type": "expire"
-            }
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Expire images older than ${var.expiration_after_days} days",
+        selection = {
+          tagStatus   = "any"
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = "${var.expiration_after_days}"
         }
+        action = {
+          type = "expire"
+        }
+      }
     ]
-  }
-EOF
+  })
 }
