@@ -33,6 +33,10 @@ resource "aws_eip" "nat" {
   lifecycle {
     create_before_destroy = true
   }
+
+  tags = {
+    Name = "nat-gw-eip"
+  }
 }
 
 
