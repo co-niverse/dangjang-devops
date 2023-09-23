@@ -8,3 +8,7 @@ module "network" {
 module "s3" {
   source = "./s3"
 }
+
+module "ecr" {
+  source = "./ecr"
+}
