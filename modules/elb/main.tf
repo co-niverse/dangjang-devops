@@ -37,12 +37,6 @@ resource "aws_alb_target_group" "default" {
   }
 }
 
-# ELB target group attachment
-# resource "aws_alb_target_group_attachment" "default" {
-#   target_group_arn = aws_alb_target_group.default.id # 어떤 그룹에 컨테이너 등록
-#   target_id        = aws_ecs_service.fargate.id   # 어떤 컨테이너를 등록
-# }
-
 # ELB listener
 resource "aws_alb_listener" "default" {
   load_balancer_arn = aws_lb.default.arn
@@ -61,22 +55,3 @@ data "aws_acm_certificate" "acm" {
   domain   = "${var.domain}"
   statuses = ["ISSUED"]
 }
-
-# ELB listener rule
-# resource "aws_alb_listener_rule" "elb" {
-#   listener_arn = aws_alb_listener.default.arn
-#   action {
-#     type = "redirect" # 리디렉션 작업
-
-#     redirect {
-#       port        = "443"
-#       protocol    = "HTTPS"
-#       status_code = "HTTP_301"
-#     }
-#   }
-#   condition {
-#     path_pattern {
-#       values = ["/**"]
-#     }
-#   }
-# }
