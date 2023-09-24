@@ -1,6 +1,5 @@
-variable "acm_domain" {
+variable "domain" {
   type = string
-  default = "dangjangclub.com"
 }
 
 variable "env" {

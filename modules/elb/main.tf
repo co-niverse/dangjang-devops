@@ -57,7 +57,7 @@ resource "aws_alb_listener" "default" {
 }
 
 data "aws_acm_certificate" "acm" {
-  domain   = "${var.acm_domain}"
+  domain   = "${var.domain}"
   statuses = ["ISSUED"]
 }
 

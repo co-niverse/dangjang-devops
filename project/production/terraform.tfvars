@@ -20,3 +20,6 @@ cidr_numeral_private_db = {
   "1" = "112"
   "2" = "128"
 }
+
+### Route53
+domain = "dangjangclub.com"
