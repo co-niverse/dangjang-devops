@@ -1,3 +1,7 @@
+###################
+#       ECR       #
+###################
+
 ### ECR private repository
 resource "aws_ecr_repository" "repo" {
   name                 = var.env
