@@ -20,6 +20,7 @@ resource "aws_alb_target_group" "default" {
   name        = "tg-${var.env}"
   port        = 8080 # 대상이 수신하는 포트
   protocol    = "HTTP"
+  protocol_version = "HTTP2"
   target_type = "instance"
   vpc_id      = "${var.vpc_id}"
 
