@@ -1,48 +1,38 @@
+### ECR private repository
 resource "aws_ecr_repository" "prod" {
   name                 = "prod"
   image_tag_mutability = "MUTABLE"
+
   image_scanning_configuration {
     scan_on_push = true
   }
 }
 
-resource "aws_ecr_repository_policy" "prod" {
-  repository = aws_ecr_repository.prod.name
-    policy = <<EOF
-{
-    "rules": [
-        {
-            "rulePriority": 1,
-            "description": "Expire images older than ${var.expiration_after_days} days",
-            "selection": {
-                "tagStatus": "any",
-                "countType": "sinceImagePushed",
-                "countUnit": "days",
-                "countNumber": ${var.expiration_after_days}
-            },
-            "action": {
-                "type": "expire"
-            }
-        }
+data "aws_iam_policy_document" "prod" {
+  version = "2012-10-17"
+  statement {
+    sid = "AllowPullPushForOne"
+    effect = "Allow"
+
+    principals {
+      type = "AWS"
+      identifiers = ["arn:aws:iam::503792100451:user/teo"]
+    }
+
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:CompleteLayerUpload",
+      "ecr:DescribeImages",
+      "ecr:InitiateLayerUpload",
+      "ecr:PutImage",
+      "ecr:UploadLayerPart"
     ]
-}
-EOF
+  }
 }
 
-  # policy = jsonencode({
-  #   rules = [
-  #     {
-  #       rulePriority = 1
-  #       description  = "Expire images older than ${var.expiration_after_days} days",
-  #       selection = {
-  #         tagStatus   = "any"
-  #         countType   = "sinceImagePushed"
-  #         countUnit   = "days"
-  #         countNumber = var.expiration_after_days
-  #       }
-  #       action = {
-  #         type = "expire"
-  #       }
-  #     }
-  #   ]
-  # })
+resource "aws_ecr_repository_policy" "prod" {
+  repository = aws_ecr_repository.prod.name
+  policy = data.aws_iam_policy_document.prod.json
+}
