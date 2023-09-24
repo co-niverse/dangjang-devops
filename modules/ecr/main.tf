@@ -1,6 +1,6 @@
 ### ECR private repository
-resource "aws_ecr_repository" "prod" {
-  name                 = "prod"
+resource "aws_ecr_repository" "repo" {
+  name                 = var.env
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -8,15 +8,15 @@ resource "aws_ecr_repository" "prod" {
   }
 }
 
-data "aws_iam_policy_document" "prod" {
+data "aws_iam_policy_document" "repo" {
   version = "2012-10-17"
   statement {
-    sid = "AllowPullPushForOne"
+    sid    = "AllowPullPushForTwo"
     effect = "Allow"
 
     principals {
-      type = "AWS"
-      identifiers = ["arn:aws:iam::503792100451:user/teo"]
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::503792100451:user/teo", "arn:aws:iam::503792100451:user/eve"]
     }
 
     actions = [
@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "prod" {
   }
 }
 
-resource "aws_ecr_repository_policy" "prod" {
-  repository = aws_ecr_repository.prod.name
-  policy = data.aws_iam_policy_document.prod.json
+resource "aws_ecr_repository_policy" "repo" {
+  repository = aws_ecr_repository.repo.name
+  policy     = data.aws_iam_policy_document.repo.json
 }
