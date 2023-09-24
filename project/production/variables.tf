@@ -1,9 +1,29 @@
+### Common
 variable "availability_zones" {
-  description = "az list"
-  default     = ["ap-northeast-2a", "ap-northeast-2b", "ap-northeast-2c"]
-  type        = list(string)
+  type = list(string)
 }
 
 variable "aws_region" {
-  default = "ap-northeast-2"
+  type = string
+}
+
+variable "env" {
+  type = string
+}
+
+### VPC
+variable "cidr_numeral" {
+  type    = string
+}
+
+variable "cidr_numeral_public" {
+  type = map(string)
+}
+
+variable "cidr_numeral_private" {
+  type = map(string)
+}
+
+variable "cidr_numeral_private_db" {
+  type = map(string)
 }
