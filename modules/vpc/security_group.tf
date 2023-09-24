@@ -1,3 +1,7 @@
+###################
+#       VPC       #
+###################
+
 locals {
   private_subnet_cidrs = [for subnet in aws_subnet.private : subnet.cidr_block]
 }

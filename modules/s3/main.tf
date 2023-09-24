@@ -1,3 +1,7 @@
+###################
+#       S3        #
+###################
+
 resource "aws_s3_bucket" "client-log" {
   bucket = "dangjang.client.log-${var.env}"
 }

@@ -1,3 +1,7 @@
+###################
+#       VPC       #
+###################
+
 # Routes for Internet gateway which will be set in public subnet
 resource "aws_route" "public" {
   route_table_id         = aws_route_table.public.id

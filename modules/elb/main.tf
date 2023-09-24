@@ -1,4 +1,7 @@
-### ELB
+###################
+#       ELB       #
+###################
+
 resource "aws_lb" "default" {
   name               = "elb-${var.env}"
   internal           = false
