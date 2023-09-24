@@ -27,3 +27,8 @@ variable "cidr_numeral_private" {
 variable "cidr_numeral_private_db" {
   type = map(string)
 }
+
+### Route53
+variable "domain" {
+  type = string
+}
