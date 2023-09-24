@@ -36,3 +36,25 @@ resource "aws_ecr_repository_policy" "repo" {
   repository = aws_ecr_repository.repo.name
   policy     = data.aws_iam_policy_document.repo.json
 }
+
+resource "aws_ecr_lifecycle_policy" "delete_untagged_all_image" {
+  repository = aws_ecr_repository.repo.name
+  policy = jsonencode(
+    {
+      rules = [
+        {
+          rulePriority = 1
+          description  = "Keep last 10 images"
+          selection = {
+            tagStatus   = "untagged"
+            countType   = "imageCountMoreThan"
+            countNumber = 10
+          }
+          action = {
+            type = "expire"
+          }
+        }
+      ]
+    }
+  )
+}
