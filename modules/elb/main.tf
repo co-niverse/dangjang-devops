@@ -24,7 +24,7 @@ resource "aws_alb_target_group" "default" {
   port        = 8080 # 대상이 수신하는 포트
   protocol    = "HTTP"
   protocol_version = "HTTP2"
-  target_type = "instance"
+  target_type = "ip"
   vpc_id      = "${var.vpc_id}"
 
   health_check { # 상태 확인
@@ -37,6 +37,10 @@ resource "aws_alb_target_group" "default" {
 
   tags = {
     Name = "tg-${var.env}"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
