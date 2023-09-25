@@ -23,3 +23,8 @@ cidr_numeral_private_db = {
 
 ### Route53
 domain = "dangjangclub.com"
+
+### ECS
+desired_count = 3
+container_cpu = 2048
+container_memory = 4096
