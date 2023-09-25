@@ -32,3 +32,16 @@ variable "cidr_numeral_private_db" {
 variable "domain" {
   type = string
 }
+
+### ECS
+variable "desired_count" {
+  type = number
+}
+
+variable "container_cpu" {
+  type = number
+}
+
+variable "container_memory" {
+  type = number
+}
