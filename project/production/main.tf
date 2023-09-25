@@ -53,3 +53,10 @@ module "route53" {
   api_dns_name = module.elb.elb_dns_name
   api_zone_id  = module.elb.elb_zone_id
 }
+
+module "kinesis" {
+  source = "../../modules/kinesis"
+
+  env         = var.env
+  shard_count = var.shard_count
+}

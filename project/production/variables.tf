@@ -45,3 +45,8 @@ variable "container_cpu" {
 variable "container_memory" {
   type = number
 }
+
+### Kinesis
+variable "shard_count" {
+  type = number
+}
