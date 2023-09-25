@@ -2,10 +2,6 @@
 #       VPC       #
 ###################
 
-locals {
-  private_subnet_cidrs = [for subnet in aws_subnet.private : subnet.cidr_block]
-}
-
 # Default Security Group
 resource "aws_security_group" "default" {
   name   = "default-sg-${var.env}"
@@ -50,14 +46,14 @@ resource "aws_security_group" "app" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [var.elb_cidr]
+    security_groups = [aws_security_group.default.id]
   }
 
   ingress {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
-    cidr_blocks = [var.elb_cidr]
+    security_groups = [aws_security_group.default.id]
   }
 
   egress {
@@ -85,7 +81,7 @@ resource "aws_security_group" "rds" {
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"
-    cidr_blocks = local.private_subnet_cidrs
+    security_groups = [aws_security_group.app.id]
   }
 
   egress {
@@ -113,7 +109,7 @@ resource "aws_security_group" "mongo" {
     from_port   = 27017
     to_port     = 27017
     protocol    = "tcp"
-    cidr_blocks = local.private_subnet_cidrs
+    security_groups = [aws_security_group.app.id]
   }
 
   egress {
