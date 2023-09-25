@@ -29,8 +29,3 @@ variable "cidr_numeral_private" {
 variable "cidr_numeral_private_db" {
   type = map(string)
 }
-
-variable "elb_cidr" {
-  type = string
-  default = "0.0.0.0/0"
-}
