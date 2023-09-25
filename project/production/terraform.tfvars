@@ -28,3 +28,6 @@ domain = "dangjangclub.com"
 desired_count = 3
 container_cpu = 2048
 container_memory = 4096
+
+### Kinesis
+shard_count = 3
