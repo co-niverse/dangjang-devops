@@ -29,3 +29,11 @@ variable "firehose_client_log_opensearch_name" {
 variable "firehose_server_log_opensearch_name" {
   type = string
 }
+
+variable "master_user_name" {
+  type = string
+}
+
+variable "master_user_password" {
+  type = string
+}
