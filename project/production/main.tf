@@ -8,7 +8,6 @@ module "vpc" {
   cidr_numeral_private    = var.cidr_numeral_private
   cidr_numeral_private_db = var.cidr_numeral_private_db
   env                     = var.env
-  # elb = module
 }
 
 module "s3" {
@@ -23,18 +22,18 @@ module "ecr" {
   env = var.env
 }
 
-module "ecs" {
-  source = "../../modules/ecs"
+# module "ecs" {
+#   source = "../../modules/ecs"
 
-  env                  = var.env
-  app_security_group   = module.vpc.app_sg
-  elb_target_group_arn = module.elb.elb_target_group_arn
-  ecr_repository_url   = module.ecr.repository_url
-  desired_count        = var.desired_count
-  private_subnets      = module.vpc.private_subnets
-  container_cpu        = var.container_cpu
-  container_memory     = var.container_memory
-}
+#   env                  = var.env
+#   app_security_group   = module.vpc.app_sg
+#   elb_target_group_arn = module.elb.elb_target_group_arn
+#   ecr_repository_url   = module.ecr.repository_url
+#   desired_count        = var.desired_count
+#   private_subnets      = module.vpc.private_subnets
+#   container_cpu        = var.container_cpu
+#   container_memory     = var.container_memory
+# }
 
 module "elb" {
   source = "../../modules/elb"
@@ -59,4 +58,31 @@ module "kinesis" {
 
   env         = var.env
   shard_count = var.shard_count
+}
+
+module "firehose" {
+  source = "../../modules/firehose"
+
+  env                               = var.env
+  client_log_kinesis_arn            = module.kinesis.client_log_arn
+  client_log_bucket_arn             = module.s3.client_log_arn
+  client_log_opensearch_stream_name = var.client_log_opensearch_stream_name
+  server_log_kinesis_arn            = module.kinesis.server_log_arn
+  server_log_bucket_arn             = module.s3.server_log_arn
+  server_log_opensearch_stream_name = var.server_log_opensearch_stream_name
+  log_opensearch_arn                = module.opensearch.log_opensearch_arn
+}
+
+module "opensearch" {
+  source = "../../modules/opensearch"
+
+  env            = var.env
+  aws_region     = var.aws_region
+  instance_type  = var.instance_type
+  instance_count = var.instance_count
+  volume_size    = var.volume_size
+  # firehose_client_log_opensearch_arn = module.firehose.client_log_opensearch_stream_arn
+  # firehose_server_log_opensearch_arn = module.firehose.server_log_opensearch_stream_arn
+  firehose_client_log_opensearch_name = var.client_log_opensearch_stream_name
+  firehose_server_log_opensearch_name = var.server_log_opensearch_stream_name
 }
