@@ -31,3 +31,12 @@ container_memory = 4096
 
 ### Kinesis
 shard_count = 3
+
+### Firehose
+client_log_opensearch_stream_name = "fh-client-log-opensearch-stream-"
+server_log_opensearch_stream_name = "fh-server-log-opensearch-stream-"
+
+### OpenSearch
+instance_type = "c5.large.search"
+instance_count = 3
+volume_size = 20
