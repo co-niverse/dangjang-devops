@@ -2,12 +2,12 @@
 #     Kinesis     #
 ###################
 
-output "client_log" {
-  value = aws_kinesis_stream.client_log.id
+output "client_log_arn" {
+  value = aws_kinesis_stream.client_log.arn
 }
 
-output "server_log" {
-  value = aws_kinesis_stream.server_log.id
+output "server_log_arn" {
+  value = aws_kinesis_stream.server_log.arn
 }
 
 output "kinesis_role_arn" {
