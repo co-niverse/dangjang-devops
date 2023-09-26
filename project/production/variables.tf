@@ -72,3 +72,11 @@ variable "instance_count" {
 variable "volume_size" {
   type = number
 }
+
+variable "master_user_name" {
+  type = string
+}
+
+variable "master_user_password" {
+  type = string
+}

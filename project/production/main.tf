@@ -81,8 +81,8 @@ module "opensearch" {
   instance_type  = var.instance_type
   instance_count = var.instance_count
   volume_size    = var.volume_size
-  # firehose_client_log_opensearch_arn = module.firehose.client_log_opensearch_stream_arn
-  # firehose_server_log_opensearch_arn = module.firehose.server_log_opensearch_stream_arn
   firehose_client_log_opensearch_name = var.client_log_opensearch_stream_name
   firehose_server_log_opensearch_name = var.server_log_opensearch_stream_name
+  master_user_name = var.master_user_name
+  master_user_password = var.master_user_password
 }
