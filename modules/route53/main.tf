@@ -6,6 +6,10 @@
 #   name = "${var.domain}"
 # }
 
+data "aws_route53_zone" "dangjang" {
+  name = var.domain
+}
+
 # api domain
 resource "aws_route53_record" "elb" {
   zone_id = data.aws_route53_zone.dangjang.zone_id
@@ -19,6 +23,13 @@ resource "aws_route53_record" "elb" {
   }
 }
 
-data "aws_route53_zone" "dangjang" {
-  name = var.domain
+
+# mongodb domain
+resource "aws_route53_record" "mongo" {
+  zone_id = data.aws_route53_zone.dangjang.zone_id
+  name = "mongo.${var.domain}"
+  type = "A"
+  ttl = 300
+  
+  records = ["${var.mongo_private_ip}"]
 }
