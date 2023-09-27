@@ -24,7 +24,7 @@ resource "aws_internet_gateway" "default" {
 ### NAT Gateway
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id # public subnet 0번 지정
+  subnet_id     = length(aws_subnet.public) > 1 ? aws_subnet.public[1].id : aws_subnet.public[0].id
 
   tags = {
     Name = "nat-gw-${var.env}"
