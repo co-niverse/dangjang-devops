@@ -21,6 +21,7 @@ resource "aws_iam_role" "ecs_task_role" {
 }
 
 resource "aws_iam_policy" "fargate_exec" {
+  name = "ecs-fargate-exec-policy"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
