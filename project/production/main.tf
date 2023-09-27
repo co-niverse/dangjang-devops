@@ -22,18 +22,18 @@ module "ecr" {
   env = var.env
 }
 
-# module "ecs" {
-#   source = "../../modules/ecs"
+module "ecs" {
+  source = "../../modules/ecs"
 
-#   env                  = var.env
-#   app_security_group   = module.vpc.app_sg
-#   elb_target_group_arn = module.elb.elb_target_group_arn
-#   ecr_repository_url   = module.ecr.repository_url
-#   desired_count        = var.desired_count
-#   private_subnets      = module.vpc.private_subnets
-#   container_cpu        = var.container_cpu
-#   container_memory     = var.container_memory
-# }
+  env                  = var.env
+  app_security_group   = module.vpc.app_sg
+  elb_target_group_arn = module.elb.elb_target_group_arn
+  ecr_repository_url   = module.ecr.repository_url
+  desired_count        = var.desired_count
+  private_subnets      = module.vpc.private_subnets
+  container_cpu        = var.container_cpu
+  container_memory     = var.container_memory
+}
 
 module "elb" {
   source = "../../modules/elb"
