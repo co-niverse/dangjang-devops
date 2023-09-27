@@ -10,9 +10,9 @@ resource "aws_ecs_cluster" "app" {
   }
 }
 
-# ECS Service
+# ECS Service - api
 resource "aws_ecs_service" "api" {
-  name                   = "ecs-service-${var.env}"
+  name                   = "ecs-service-api-${var.env}"
   cluster                = aws_ecs_cluster.app.name
   task_definition        = aws_ecs_task_definition.api.arn
   enable_execute_command = true # 컨테이너 접속 허용
@@ -26,14 +26,14 @@ resource "aws_ecs_service" "api" {
 
   load_balancer {
     target_group_arn = var.elb_target_group_arn
-    container_name   = "container-${var.env}"
+    container_name   = "api-container-${var.env}"
     container_port   = 8080
   }
 }
 
-# ECS Task Definition
+# ECS Task Definition - api
 resource "aws_ecs_task_definition" "api" {
-  family                   = "ecs-template-${var.env}"
+  family                   = "ecs-template-api-${var.env}"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.container_cpu
@@ -48,13 +48,13 @@ resource "aws_ecs_task_definition" "api" {
   container_definitions = jsonencode([
     {
       essential = true
-      name      = "container-${var.env}"
+      name      = "api-container-${var.env}"
       image     = "${var.ecr_repository_url}"
 
       portMappings = [
         {
           containerPort = 8080
-          hostPort       = 8080
+          hostPort      = 8080
         }
       ]
     }
