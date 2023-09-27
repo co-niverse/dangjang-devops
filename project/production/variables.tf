@@ -80,3 +80,8 @@ variable "master_user_name" {
 variable "master_user_password" {
   type = string
 }
+
+### EC2
+variable "mongo_instance_type" {
+  type = string
+}
