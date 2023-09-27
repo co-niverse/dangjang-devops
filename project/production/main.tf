@@ -76,13 +76,24 @@ module "firehose" {
 module "opensearch" {
   source = "../../modules/opensearch"
 
-  env            = var.env
-  aws_region     = var.aws_region
-  instance_type  = var.instance_type
-  instance_count = var.instance_count
-  volume_size    = var.volume_size
+  env                                 = var.env
+  aws_region                          = var.aws_region
+  instance_type                       = var.instance_type
+  instance_count                      = var.instance_count
+  volume_size                         = var.volume_size
   firehose_client_log_opensearch_name = var.client_log_opensearch_stream_name
   firehose_server_log_opensearch_name = var.server_log_opensearch_stream_name
-  master_user_name = var.master_user_name
-  master_user_password = var.master_user_password
+  master_user_name                    = var.master_user_name
+  master_user_password                = var.master_user_password
+}
+
+module "ec2" {
+  source = "../../modules/ec2"
+
+  env                       = var.env
+  mongo_instance_type       = var.mongo_instance_type
+  private_db_subnets        = module.vpc.private_db_subnets
+  mongo_security_group_id   = module.vpc.mongo_sg
+  public_bastion_subnet     = module.vpc.public_subnets[0]
+  default_security_group_id = module.vpc.default_sg
 }
