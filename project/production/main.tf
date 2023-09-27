@@ -51,6 +51,7 @@ module "route53" {
   domain       = var.domain
   api_dns_name = module.elb.elb_dns_name
   api_zone_id  = module.elb.elb_zone_id
+  mongo_private_ip = module.ec2.mongo_primary_private_ip
 }
 
 module "kinesis" {

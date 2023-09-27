@@ -13,3 +13,7 @@ variable "api_dns_name" {
 variable "api_zone_id" {
   type = string
 }
+
+variable "mongo_private_ip" {
+  type = string
+}
