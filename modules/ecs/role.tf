@@ -31,7 +31,8 @@ resource "aws_iam_policy" "fargate_exec" {
           "ssmmessages:CreateControlChannel",
           "ssmmessages:CreateDataChannel",
           "ssmmessages:OpenControlChannel",
-          "ssmmessages:OpenDataChannel"
+          "ssmmessages:OpenDataChannel",
+          "kinesis:PutRecords"
         ]
         Resource = "*"
       }
