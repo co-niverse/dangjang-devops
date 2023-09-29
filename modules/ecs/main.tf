@@ -66,7 +66,12 @@ resource "aws_ecs_task_definition" "api" {
       image     = "${var.fluentbit_repository_url}"
       cpu       = 512
       memory    = 512
-
+      environment = [
+        {
+          name  = "env"
+          value = "${var.env}"
+        }
+      ]
       portMappings = [
         {
           containerPort = 8888
