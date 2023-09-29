@@ -45,13 +45,13 @@ jobs:
       run: |
         docker build -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
         docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-      working-directory: './fluentbit'
+      working-directory: ./fluentbit
 
     - name: Build and push image to Amazon ECR (prod)
       run: |
         docker build -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.PROD_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
         docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.PROD_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-      working-directory: './fluentbit'
+      working-directory: ./fluentbit
 
     - name: Pull image from Amazon ECR and restart container in EC2 (dev)
       uses: appleboy/ssh-action@master
