@@ -14,7 +14,11 @@ variable "elb_target_group_arn" {
   type = string
 }
 
-variable "ecr_repository_url" {
+variable "app_repository_url" {
+  type = string
+}
+
+variable "fluentbit_repository_url" {
   type = string
 }
 

@@ -49,7 +49,7 @@ resource "aws_ecs_task_definition" "api" {
     {
       essential = true
       name      = "api-container-${var.env}"
-      image     = "${var.ecr_repository_url}"
+      image     = "${var.app_repository_url}"
       cpu       = 2048
       memory    = 4096
 
@@ -63,14 +63,18 @@ resource "aws_ecs_task_definition" "api" {
     {
       essential = true
       name      = "fluentbit-${var.env}"
-      image     = "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable" # 수정
+      image     = "${var.fluentbit_repository_url}"
       cpu       = 512
       memory    = 512
 
       portMappings = [
         {
-          containerPort = 2020
-          hostPort      = 2020
+          containerPort = 8888
+          hostPort      = 8888
+        },
+        {
+          containerPort = 8889
+          hostPort      = 8889
         }
       ]
     }

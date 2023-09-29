@@ -2,63 +2,26 @@
 #       ECR       #
 ###################
 
-### ECR private repository
-resource "aws_ecr_repository" "repo" {
+### ECR private repository - app
+resource "aws_ecr_repository" "app" {
   name                 = var.env
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
   }
-}
 
-data "aws_iam_policy_document" "repo" {
-  version = "2012-10-17"
-  statement {
-    sid    = "AllowPullPushForTwo"
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::503792100451:user/teo", "arn:aws:iam::503792100451:user/eve"]
-    }
-
-    actions = [
-      "ecr:BatchGetImage",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:CompleteLayerUpload",
-      "ecr:DescribeImages",
-      "ecr:InitiateLayerUpload",
-      "ecr:PutImage",
-      "ecr:UploadLayerPart"
-    ]
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
-resource "aws_ecr_repository_policy" "repo" {
-  repository = aws_ecr_repository.repo.name
-  policy     = data.aws_iam_policy_document.repo.json
-}
+### ECR private repository - fluentbit
+resource "aws_ecr_repository" "fluentbit" {
+  name                 = "fluendbit-${var.env}"
+  image_tag_mutability = "MUTABLE"
 
-resource "aws_ecr_lifecycle_policy" "delete_untagged_all_image" {
-  repository = aws_ecr_repository.repo.name
-  policy = jsonencode(
-    {
-      rules = [
-        {
-          rulePriority = 1
-          description  = "Keep last 10 images"
-          selection = {
-            tagStatus   = "untagged"
-            countType   = "imageCountMoreThan"
-            countNumber = 10
-          }
-          action = {
-            type = "expire"
-          }
-        }
-      ]
-    }
-  )
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 }
