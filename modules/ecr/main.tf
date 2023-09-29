@@ -18,7 +18,7 @@ resource "aws_ecr_repository" "app" {
 
 ### ECR private repository - fluentbit
 resource "aws_ecr_repository" "fluentbit" {
-  name                 = "fluendbit-${var.env}"
+  name                 = "fluentbit-${var.env}"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
