@@ -51,15 +51,6 @@ variable "shard_count" {
   type = number
 }
 
-### Firehose
-variable "client_log_opensearch_stream_name" {
-  type = string
-}
-
-variable "server_log_opensearch_stream_name" {
-  type = string
-}
-
 ### OpenSearch
 variable "instance_type" {
   type = string

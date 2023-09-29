@@ -22,7 +22,7 @@ resource "aws_kinesis_firehose_delivery_stream" "client_log_s3_stream" {
 
 # Client-log OpenSearch
 resource "aws_kinesis_firehose_delivery_stream" "client_log_opensearch_stream" {
-  name        = "${var.client_log_opensearch_stream_name}${var.env}"
+  name        = "fh-client-log-opensearch-stream-${var.env}"
   destination = "opensearch"
 
   kinesis_source_configuration {
@@ -62,7 +62,7 @@ resource "aws_kinesis_firehose_delivery_stream" "server_log_s3_stream" {
 
 # Server-log OpenSearch
 resource "aws_kinesis_firehose_delivery_stream" "server_log_opensearch_stream" {
-  name        = "${var.server_log_opensearch_stream_name}${var.env}"
+  name        = "fn-server-log-opensearch-stream-${var.env}"
   destination = "opensearch"
 
   kinesis_source_configuration {

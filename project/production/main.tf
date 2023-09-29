@@ -68,10 +68,8 @@ module "firehose" {
   env                               = var.env
   client_log_kinesis_arn            = module.kinesis.client_log_arn
   client_log_bucket_arn             = module.s3.client_log_arn
-  client_log_opensearch_stream_name = var.client_log_opensearch_stream_name
   server_log_kinesis_arn            = module.kinesis.server_log_arn
   server_log_bucket_arn             = module.s3.server_log_arn
-  server_log_opensearch_stream_name = var.server_log_opensearch_stream_name
   log_opensearch_arn                = module.opensearch.log_opensearch_arn
 }
 
@@ -79,12 +77,9 @@ module "opensearch" {
   source = "../../modules/opensearch"
 
   env                                 = var.env
-  aws_region                          = var.aws_region
   instance_type                       = var.instance_type
   instance_count                      = var.instance_count
   volume_size                         = var.volume_size
-  firehose_client_log_opensearch_name = var.client_log_opensearch_stream_name
-  firehose_server_log_opensearch_name = var.server_log_opensearch_stream_name
   master_user_name                    = var.master_user_name
   master_user_password                = var.master_user_password
 }
