@@ -3,7 +3,7 @@
 ###################
 
 resource "aws_iam_role" "firehose_role" {
-  name = "firehose-role"
+  name = "firehose-role-${var.env}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -21,7 +21,7 @@ resource "aws_iam_role" "firehose_role" {
 
 ### S3 policy
 resource "aws_iam_policy" "firehose_s3" {
-  name = "firehose-s3-policy"
+  name = "firehose-s3-policy-${var.env}"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -54,7 +54,7 @@ resource "aws_iam_role_policy_attachment" "firehose_s3" {
 
 ### OpenSearch policy
 resource "aws_iam_policy" "firehose_opensearch" {
-  name = "firehose-opensearch-policy"
+  name = "firehose-opensearch-policy-${var.env}"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -100,7 +100,7 @@ resource "aws_iam_role_policy_attachment" "firehose_opensearch" {
 
 ### Kinesis policy
 resource "aws_iam_policy" "firehose_kinesis" {
-  name = "firehose-kinesis-policy"
+  name = "firehose-kinesis-policy-${var.env}"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -129,7 +129,7 @@ resource "aws_iam_role_policy_attachment" "firehose_kinesis" {
 
 ### Put record policy
 resource "aws_iam_policy" "put_record" {
-  name = "firehose-put-record-policy"
+  name = "firehose-put-record-policy-${var.env}"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
