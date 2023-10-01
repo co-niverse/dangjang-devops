@@ -33,6 +33,10 @@ variable "domain" {
   type = string
 }
 
+variable "create_private_zone" {
+  type = bool
+}
+
 ### ECS
 variable "desired_count" {
   type = number
@@ -75,4 +79,33 @@ variable "master_user_password" {
 ### EC2
 variable "mongo_instance_type" {
   type = string
+}
+
+### RDS
+variable "rds_storage_size" {
+  type = number
+}
+
+variable "rds_instance_type" {
+  type = string
+}
+
+variable "rds_multi_az" {
+  type = bool
+}
+
+variable "rds_username" {
+  type = string
+}
+
+variable "rds_password" {
+  type = string
+}
+
+variable "create_replica" {
+  type = bool
+}
+
+variable "create_snapshot" {
+  type = bool
 }
