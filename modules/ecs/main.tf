@@ -62,7 +62,7 @@ resource "aws_ecs_task_definition" "api" {
     },
     {
       essential = true
-      name      = "fluentbit-${var.env}"
+      name      = "fluentbit-container-${var.env}"
       image     = "${var.fluentbit_repository_url}"
       cpu       = 512
       memory    = 512
