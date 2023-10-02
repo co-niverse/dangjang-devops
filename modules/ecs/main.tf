@@ -10,26 +10,27 @@ resource "aws_ecs_cluster" "app" {
   }
 }
 
-# # ECS Service - api
-# resource "aws_ecs_service" "api" {
-#   name                   = "ecs-service-api-${var.env}"
-#   cluster                = aws_ecs_cluster.app.name
-#   task_definition        = aws_ecs_task_definition.api.arn
-#   enable_execute_command = true # 컨테이너 접속 허용
-#   launch_type            = "FARGATE"
-#   desired_count          = var.desired_count # task 실행 횟수
+# ECS Service - api
+resource "aws_ecs_service" "api" {
+  name                   = "ecs-service-api-${var.env}"
+  cluster                = aws_ecs_cluster.app.name
+  task_definition        = aws_ecs_task_definition.api.arn
+  enable_execute_command = true # 컨테이너 접속 허용
+  launch_type            = "FARGATE"
+  desired_count          = var.desired_count # task 실행 횟수
+  health_check_grace_period_seconds = 300 # 상태 확인 대기 시간
 
-#   network_configuration {
-#     subnets         = var.private_subnets # 서브넷 등록
-#     security_groups = ["${var.app_security_group}"]
-#   }
+  network_configuration {
+    subnets         = var.private_subnets # 서브넷 등록
+    security_groups = ["${var.app_security_group}"]
+  }
 
-#   load_balancer {
-#     target_group_arn = var.elb_target_group_arn
-#     container_name   = "api-container-${var.env}"
-#     container_port   = 8080
-#   }
-# }
+  load_balancer {
+    target_group_arn = var.elb_target_group_arn
+    container_name   = "api-container-${var.env}"
+    container_port   = 8080
+  }
+}
 
 # ECS Task Definition - api
 resource "aws_ecs_task_definition" "api" {
@@ -49,7 +50,7 @@ resource "aws_ecs_task_definition" "api" {
     {
       essential = true
       name      = "api-container-${var.env}"
-      image     = "${var.app_repository_url}"
+      image     = "${var.app_repository_url}:latest"
       cpu       = 2048
       memory    = 4096
 
@@ -63,7 +64,7 @@ resource "aws_ecs_task_definition" "api" {
     {
       essential = true
       name      = "fluentbit-container-${var.env}"
-      image     = "${var.fluentbit_repository_url}"
+      image     = "${var.fluentbit_repository_url}:latest"
       cpu       = 512
       memory    = 512
       environment = [
