@@ -43,15 +43,15 @@ resource "aws_security_group" "app" {
   vpc_id = aws_vpc.default.id
 
   ingress {
-    from_port       = 80
-    to_port         = 80
+    from_port       = 8080
+    to_port         = 8080
     protocol        = "tcp"
     security_groups = [aws_security_group.default.id]
   }
 
   ingress {
-    from_port       = 8080
-    to_port         = 8080
+    from_port       = 8081
+    to_port         = 8081
     protocol        = "tcp"
     security_groups = [aws_security_group.default.id]
   }
