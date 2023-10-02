@@ -5,3 +5,7 @@ module "s3" {
 module "iam" {
   source = "./iam"
 }
+
+module "cloudwatch" {
+  source = "./cloudwatch"
+}
