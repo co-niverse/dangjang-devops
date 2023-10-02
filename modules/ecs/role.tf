@@ -41,13 +41,14 @@ resource "aws_iam_policy" "fargate_exec" {
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_role_policy" {
-  count = 3
+  count = 4
   role  = aws_iam_role.ecs_task_role.name
   policy_arn = element(
     [
+      aws_iam_policy.fargate_exec.arn,
       "arn:aws:iam::aws:policy/AmazonS3FullAccess",
       "arn:aws:iam::aws:policy/AmazonRDSFullAccess",
-      aws_iam_policy.fargate_exec.arn
+      "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
     ],
     count.index
   )
