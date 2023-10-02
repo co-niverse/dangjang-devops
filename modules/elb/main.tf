@@ -23,16 +23,16 @@ resource "aws_alb_target_group" "default" {
   name        = "tg-${var.env}"
   port        = 8080 # 대상이 수신하는 포트
   protocol    = "HTTP"
-  protocol_version = "HTTP2"
   target_type = "ip"
-  vpc_id      = "${var.vpc_id}"
+  vpc_id      = var.vpc_id
 
   health_check { # 상태 확인
     port                = 8080
-    interval            = 60  # 주기 (sec)
-    path                = "/api/intro/prod" # ping 경로
-    healthy_threshold   = 3   # 정상 간주 성공 횟수
-    unhealthy_threshold = 3   # 비정상 간주 실패 횟수
+    interval            = 180            # 주기 (sec)
+    path                = "/healthcheck" # ping 경로
+    matcher             = "404"          # 상태 확인 성공 코드
+    healthy_threshold   = 2              # 정상 간주 성공 횟수
+    unhealthy_threshold = 2              # 비정상 간주 실패 횟수
   }
 
   tags = {
@@ -49,8 +49,8 @@ resource "aws_alb_listener" "default" {
   load_balancer_arn = aws_lb.default.arn
   port              = "443"
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"      # ssl 정책
-  certificate_arn   = data.aws_acm_certificate.acm.arn #인증서
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06" # ssl 정책
+  certificate_arn   = data.aws_acm_certificate.acm.arn      #인증서
 
   default_action {
     type             = "forward" # 대상 그룹에 포워딩
@@ -59,6 +59,6 @@ resource "aws_alb_listener" "default" {
 }
 
 data "aws_acm_certificate" "acm" {
-  domain   = "${var.domain}"
+  domain   = var.domain
   statuses = ["ISSUED"]
 }
