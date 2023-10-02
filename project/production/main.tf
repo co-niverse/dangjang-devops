@@ -95,7 +95,7 @@ module "ec2" {
   private_db_subnets        = module.vpc.private_db_subnets
   mongo_security_group_id   = module.vpc.mongo_sg
   public_bastion_subnet     = module.vpc.public_subnets[0]
-  default_security_group_id = module.vpc.default_sg
+  bastion_security_group_id = module.vpc.bastion_sg
 }
 
 module "rds" {

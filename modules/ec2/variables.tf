@@ -22,6 +22,6 @@ variable "public_bastion_subnet" {
   type = string
 }
 
-variable "default_security_group_id" {
+variable "bastion_security_group_id" {
   type = string
 }
