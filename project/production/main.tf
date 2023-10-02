@@ -43,7 +43,7 @@ module "elb" {
   vpc_id         = module.vpc.vpc_id
   public_subnets = module.vpc.public_subnets
   default_sg     = module.vpc.default_sg
-  domain         = var.domain
+  domain         = var.acm_domain
 }
 
 module "route53" {

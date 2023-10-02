@@ -50,6 +50,11 @@ variable "container_memory" {
   type = number
 }
 
+### ELB
+variable "acm_domain" {
+  type = string
+}
+
 ### Kinesis
 variable "shard_count" {
   type = number
