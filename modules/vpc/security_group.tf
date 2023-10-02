@@ -21,13 +21,6 @@ resource "aws_security_group" "default" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -88,7 +81,7 @@ resource "aws_security_group" "rds" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.app.id, aws_security_group.default.id]
+    security_groups = [aws_security_group.app.id, aws_security_group.bastion.id]
   }
 
   egress {
@@ -123,7 +116,7 @@ resource "aws_security_group" "mongo" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.default.id]
+    security_groups = [aws_security_group.bastion.id]
   }
 
   egress {
@@ -139,5 +132,33 @@ resource "aws_security_group" "mongo" {
 
   tags = {
     Name = "mongo-sg-${var.env}"
+  }
+}
+
+# Bastion Security Group
+resource "aws_security_group" "bastion" {
+  name   = "bastion-sg-${var.env}"
+  vpc_id = aws_vpc.default.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "bastion-sg-${var.env}"
   }
 }

@@ -33,3 +33,7 @@ output "rds_sg" {
 output "mongo_sg" {
   value = aws_security_group.mongo.id
 }
+
+output "bastion_sg" {
+  value = aws_security_group.bastion.id
+}
