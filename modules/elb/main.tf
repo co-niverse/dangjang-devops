@@ -28,7 +28,7 @@ resource "aws_alb_target_group" "default" {
 
   health_check { # 상태 확인
     port                = 8080
-    interval            = 180            # 주기 (sec)
+    interval            = 300            # 주기 (sec)
     path                = "/healthcheck" # ping 경로
     matcher             = "404"          # 상태 확인 성공 코드
     healthy_threshold   = 2              # 정상 간주 성공 횟수
