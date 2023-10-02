@@ -18,7 +18,7 @@ resource "aws_ecs_service" "api" {
   enable_execute_command = true # 컨테이너 접속 허용
   launch_type            = "FARGATE"
   desired_count          = var.desired_count # task 실행 횟수
-  health_check_grace_period_seconds = 300 # 상태 확인 대기 시간
+  health_check_grace_period_seconds = 180 # 상태 확인 대기 시간
 
   network_configuration {
     subnets         = var.private_subnets # 서브넷 등록
@@ -58,6 +58,10 @@ resource "aws_ecs_task_definition" "api" {
         {
           containerPort = 8080
           hostPort      = 8080
+        },
+        {
+          containerPort = 8081
+          hostPort      = 8081
         }
       ]
     },

@@ -27,12 +27,12 @@ resource "aws_alb_target_group" "default" {
   vpc_id      = var.vpc_id
 
   health_check { # 상태 확인
-    port                = 8080
-    interval            = 300            # 주기 (sec)
-    path                = "/healthcheck" # ping 경로
-    matcher             = "404"          # 상태 확인 성공 코드
-    healthy_threshold   = 2              # 정상 간주 성공 횟수
-    unhealthy_threshold = 2              # 비정상 간주 실패 횟수
+    port                = 8081               # 상태 확인 포트
+    interval            = 300                # 주기 (sec)
+    path                = "/actuator/health" # ping 경로
+    matcher             = "200"              # 상태 확인 성공 코드
+    healthy_threshold   = 2                  # 정상 간주 성공 횟수
+    unhealthy_threshold = 2                  # 비정상 간주 실패 횟수
   }
 
   tags = {
@@ -58,7 +58,7 @@ resource "aws_alb_listener" "default" {
   }
 }
 
-data "aws_acm_certificate" "acm" {
+data "aws_acm_certificate" "acm" { # 활성화된 도메인 인증서 가져오기
   domain   = var.domain
   statuses = ["ISSUED"]
 }
