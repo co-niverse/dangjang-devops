@@ -30,7 +30,7 @@ resource "aws_alb_target_group" "default" {
   health_check { # 상태 확인
     port                = 8080
     interval            = 60  # 주기 (sec)
-    path                = "/api/intro" # ping 경로
+    path                = "/api/intro/prod" # ping 경로
     healthy_threshold   = 3   # 정상 간주 성공 횟수
     unhealthy_threshold = 3   # 비정상 간주 실패 횟수
   }
