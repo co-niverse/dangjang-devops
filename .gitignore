@@ -5,3 +5,4 @@
 *.tfvars
 
 .vscode
+.DS_Store
