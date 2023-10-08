@@ -16,11 +16,11 @@ resource "aws_db_instance" "primary" {
   password = var.password
   db_name  = var.env
 
-  parameter_group_name   = aws_db_parameter_group.rds.name
-  db_subnet_group_name   = aws_db_subnet_group.rds.name
-  skip_final_snapshot    = true
-  vpc_security_group_ids = ["${var.security_group_id}"]
-  apply_immediately      = true
+  parameter_group_name    = aws_db_parameter_group.rds.name
+  db_subnet_group_name    = aws_db_subnet_group.rds.name
+  skip_final_snapshot     = true
+  vpc_security_group_ids  = ["${var.security_group_id}"]
+  apply_immediately       = true
   backup_retention_period = 7
 }
 
@@ -101,13 +101,15 @@ resource "aws_db_parameter_group" "rds" {
   }
 
   parameter {
-    name  = "collation_connection"
-    value = "utf8_general_ci"
+    name         = "collation_connection"
+    value        = "utf8_general_ci"
+    apply_method = "pending-reboot"
   }
 
   parameter {
-    name  = "collation_server"
-    value = "utf8_general_ci"
+    name         = "collation_server"
+    value        = "utf8_general_ci"
+    apply_method = "pending-reboot"
   }
 
   parameter {
