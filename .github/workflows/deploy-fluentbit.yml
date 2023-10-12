@@ -60,7 +60,7 @@ jobs:
           docker login -u AWS -p $(aws ecr get-login-password --region ${{ env.AWS_REGION }}) ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           docker pull ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
           docker stop fluentbit-dev && docker rm fluentbit-dev
-          docker run -d --name fluentbit-dev -p 8888:8888 -p 8889:8889 --network dev-network -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} -e env=dev ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          docker run -d --name fluentbit-dev -p 8888:8888 --network dev-network -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} -e env=dev ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
     
     - name: Download task definition
       run: |
