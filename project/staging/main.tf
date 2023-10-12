@@ -62,7 +62,8 @@ module "kinesis" {
   source = "../../modules/kinesis"
 
   env         = var.env
-  shard_count = var.shard_count
+  log_shard_count = var.log_shard_count
+  notification_shard_count = var.notification_shard_count
 }
 
 module "firehose" {
