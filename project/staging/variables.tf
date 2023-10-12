@@ -56,7 +56,11 @@ variable "acm_domain" {
 }
 
 ### Kinesis
-variable "shard_count" {
+variable "log_shard_count" {
+  type = number
+}
+
+variable "notification_shard_count" {
   type = number
 }
 
@@ -113,4 +117,13 @@ variable "create_replica" {
 
 variable "create_snapshot" {
   type = bool
+}
+
+### Lambda
+variable "file_path" {
+  type = string
+}
+
+variable "zip_path" {
+  type = string
 }
