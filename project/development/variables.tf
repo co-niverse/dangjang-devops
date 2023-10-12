@@ -12,17 +12,12 @@ variable "env" {
 }
 
 ### Kinesis
-variable "shard_count" {
+variable "log_shard_count" {
   type = number
 }
 
-### Firehose
-variable "client_log_opensearch_stream_name" {
-  type = string
-}
-
-variable "server_log_opensearch_stream_name" {
-  type = string
+variable "notification_shard_count" {
+  type = number
 }
 
 ### OpenSearch
@@ -43,5 +38,14 @@ variable "master_user_name" {
 }
 
 variable "master_user_password" {
+  type = string
+}
+
+### Lambda
+variable "file_path" {
+  type = string
+}
+
+variable "zip_path" {
   type = string
 }
