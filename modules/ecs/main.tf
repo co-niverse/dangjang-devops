@@ -81,10 +81,6 @@ resource "aws_ecs_task_definition" "api" {
         {
           containerPort = 8888
           hostPort      = 8888
-        },
-        {
-          containerPort = 8889
-          hostPort      = 8889
         }
       ]
     }
