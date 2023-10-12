@@ -6,6 +6,10 @@ variable "env" {
   type = string
 }
 
-variable "shard_count" {
+variable "log_shard_count" {
+  type = number
+}
+
+variable "notification_shard_count" {
   type = number
 }
