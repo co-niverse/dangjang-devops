@@ -4,6 +4,7 @@
 .terraform.*
 *.tfvars
 
-dangjangFcmKey.json
+*.json
+*.zip
 .vscode
 .DS_Store
