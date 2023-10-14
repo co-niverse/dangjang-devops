@@ -1,5 +1,5 @@
 module "log_group_policy" {
-  source      = "../module/iam-policy"
+  source      = "../../../modules/iam-policy"
   policy_name = "dangjang-log-group-policy"
   policy = jsonencode({
     Version = "2012-10-17"
@@ -20,7 +20,7 @@ module "log_group_policy" {
 }
 
 module "kinesis_policy" {
-  source      = "../module/iam-policy"
+  source      = "../../../modules/iam-policy"
   policy_name = "dangjang-kinesis-policy"
   policy = jsonencode({
     Version = "2012-10-17"
