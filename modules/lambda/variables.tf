@@ -58,7 +58,7 @@ variable "environment" {
   default = { }
 }
 
-variable "layer_arns" {
+variable "layer_names" {
   type = list(string)
   default = [ ]
 }

@@ -50,7 +50,7 @@ module "notification_lambda" {
   function_name          = "notification-lambda-${var.env}"
   handler_name           = var.notification_handler
   environment            = var.notification_environment
-  layer_arns             = [module.fcm_layer.layer_arn]
+  layer_names             = [var.fcm_layer_name]
   create_kinesis_trigger = true
   kinesis_arn            = module.kinesis.notification_arn
 }
@@ -60,12 +60,4 @@ module "notification_lambda_log_goup" {
 
   log_group_name = "/aws/lambda/${module.notification_lambda.function_name}"
   retention_days = 1
-}
-
-module "fcm_layer" {
-  source = "../../modules/lambda_layer"
-
-  layer_name = var.fcm_layer_name
-  dir_path   = var.fcm_layer_dir_path
-  zip_path   = var.fcm_layer_zip_path
 }

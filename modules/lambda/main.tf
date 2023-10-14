@@ -7,6 +7,12 @@ data "aws_iam_role" "lambda" {
   name = var.role_name
 }
 
+# layer 가져오기
+data "aws_lambda_layer_version" "layer" {
+  count      = length(var.layer_names) > 0 ? length(var.layer_names) : 0
+  layer_name = var.layer_names[count.index]
+}
+
 # 변경사항 압축 파일 생성
 data "archive_file" "init" {
   type = "zip"
@@ -28,7 +34,7 @@ resource "aws_lambda_function" "function" {
   source_code_hash = data.archive_file.init.output_base64sha256 # zip 파일을 sha256로 해싱하여 업데이트 트리거
   timeout          = var.timeout                                # 함수 실행 제한 시간 (sec)
   memory_size      = var.memory_size                            # 런타임 중 할당되는 메모리 크기 (MB)
-  layers           = var.layer_arns                             # 람다 레이어 추가
+  layers           = data.aws_lambda_layer_version.layer.*.arn  # 람다 레이어 추가
 
   environment {
     variables = var.environment # 환경변수

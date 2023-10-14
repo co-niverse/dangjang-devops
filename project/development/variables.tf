@@ -62,15 +62,6 @@ variable "notification_environment" {
   type = map(string)
 }
 
-### Lambda Layer
 variable "fcm_layer_name" {
-  type = string
-}
-
-variable "fcm_layer_dir_path" {
-  type = string
-}
-
-variable "fcm_layer_zip_path" {
   type = string
 }
