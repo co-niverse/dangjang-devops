@@ -43,10 +43,10 @@ module "opensearch" {
 module "notification_lambda" {
   source = "../../modules/lambda"
 
+  role_name              = var.notification_lambda_role_name
   dir                    = true
   dir_path               = var.notification_function_dir_path
   zip_path               = var.notification_function_zip_path
-  env                    = var.env # TODO 리팩토링 시 제거
   function_name          = "notification-lambda-${var.env}"
   handler_name           = var.notification_handler
   environment            = var.notification_environment

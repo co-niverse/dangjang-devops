@@ -2,6 +2,10 @@
 #     Lambda      #
 ###################
 
+variable "role_name" {
+  type = string
+}
+
 variable "dir" {
   type = bool
   default = false
@@ -18,10 +22,6 @@ variable "file_path" {
 }
   
 variable "zip_path" {
-  type = string
-}
-
-variable "env" {
   type = string
 }
 

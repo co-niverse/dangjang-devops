@@ -2,9 +2,15 @@
 #     Lambda      #
 ###################
 
+# role 가져오기
+data "aws_iam_role" "lambda" {
+  name = var.role_name
+}
+
 # 변경사항 압축 파일 생성
 data "archive_file" "init" {
-  type        = "zip"
+  type = "zip"
+
   # dir = true이면 source_dir, 아니면 source_file
   source_dir  = var.dir ? var.dir_path : null
   source_file = var.dir ? null : var.file_path
@@ -14,7 +20,7 @@ data "archive_file" "init" {
 # Lambda function 생성
 resource "aws_lambda_function" "function" {
   function_name    = var.function_name                          # 람다 함수명
-  role             = module.notification_lambda_role.arn        # 람다 함수가 사용할 역할 TODO 리팩토링 시 수정
+  role             = data.aws_iam_role.lambda.arn               # 람다 함수가 사용할 IAM 역할
   handler          = var.handler_name                           # 람다 함수의 핸들러명
   runtime          = var.runtime                                # 런타임
   architectures    = var.architectures                          # 아키텍처
@@ -25,7 +31,7 @@ resource "aws_lambda_function" "function" {
   layers           = var.layer_arns                             # 람다 레이어 추가
 
   environment {
-    variables = var.environment
+    variables = var.environment # 환경변수
   }
 
   lifecycle {

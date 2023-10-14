@@ -42,6 +42,10 @@ variable "master_user_password" {
 }
 
 ### Lambda (Notification)
+variable "notification_lambda_role_name" {
+  type = string
+}
+
 variable "notification_function_dir_path" {
   type = string
 }
