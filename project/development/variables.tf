@@ -41,11 +41,32 @@ variable "master_user_password" {
   type = string
 }
 
-### Lambda
-variable "file_path" {
+### Lambda (Notification)
+variable "notification_function_dir_path" {
   type = string
 }
 
-variable "zip_path" {
+variable "notification_function_zip_path" {
+  type = string
+}
+
+variable "notification_handler" {
+  type = string
+}
+
+variable "notification_environment" {
+  type = map(string)
+}
+
+### Lambda Layer
+variable "fcm_layer_name" {
+  type = string
+}
+
+variable "fcm_layer_dir_path" {
+  type = string
+}
+
+variable "fcm_layer_zip_path" {
   type = string
 }

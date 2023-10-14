@@ -40,11 +40,32 @@ module "opensearch" {
   master_user_password = var.master_user_password
 }
 
-module "lambda" {
+module "notification_lambda" {
   source = "../../modules/lambda"
 
-  env                      = var.env
-  notification_kinesis_arn = module.kinesis.notification_arn
-  file_path = var.file_path
-  zip_path = var.zip_path
+  dir                    = true
+  dir_path               = var.notification_function_dir_path
+  zip_path               = var.notification_function_zip_path
+  env                    = var.env # TODO 리팩토링 시 제거
+  function_name          = "notification-lambda-${var.env}"
+  handler_name           = var.notification_handler
+  environment            = var.notification_environment
+  layer_arns             = [module.fcm_layer.layer_arn]
+  create_kinesis_trigger = true
+  kinesis_arn            = module.kinesis.notification_arn
+}
+
+module "notification_lambda_log_goup" {
+  source = "../../modules/cloudwatch"
+
+  log_group_name = "/aws/lambda/${module.notification_lambda.function_name}"
+  retention_days = 1
+}
+
+module "fcm_layer" {
+  source = "../../modules/lambda_layer"
+
+  layer_name = var.fcm_layer_name
+  dir_path   = var.fcm_layer_dir_path
+  zip_path   = var.fcm_layer_zip_path
 }
