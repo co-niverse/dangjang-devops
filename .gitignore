@@ -8,3 +8,4 @@
 *.zip
 .vscode
 .DS_Store
+**/layer/
