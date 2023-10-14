@@ -5,7 +5,7 @@
 *.tfvars
 
 *.json
-*.zip
+function/*.zip
 .vscode
 .DS_Store
-**/layer/
+**/layer/**/python
