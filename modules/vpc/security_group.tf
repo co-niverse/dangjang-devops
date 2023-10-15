@@ -135,6 +135,34 @@ resource "aws_security_group" "mongo" {
   }
 }
 
+# Elasticache Security Group
+resource "aws_security_group" "cache" {
+  name   = "cache-sg-${var.env}"
+  vpc_id = aws_vpc.default.id
+
+  ingress {
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app.id, aws_security_group.bastion.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "cache-sg-${var.env}"
+  }
+}
+
 # Bastion Security Group
 resource "aws_security_group" "bastion" {
   name   = "bastion-sg-${var.env}"
