@@ -22,6 +22,10 @@ variable "rds_endpoint" {
   type = string
 }
 
+variable "cache_endpoint" {
+  type = string
+}
+
 variable "api_dns_name" {
   type = string
 }

@@ -34,6 +34,17 @@ resource "aws_route53_record" "rds" {
   records = ["${var.rds_endpoint}"]
 }
 
+# cache domain
+resource "aws_route53_record" "cache" {
+  depends_on = [ aws_route53_zone.private ]
+  zone_id = aws_route53_zone.private[0].zone_id
+  name = "cache.${var.domain}"
+  type = "CNAME"
+  ttl = 300
+  
+  records = ["${var.cache_endpoint}"]
+}
+
 
 ### public zone
 data "aws_route53_zone" "public" {
