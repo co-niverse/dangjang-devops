@@ -6,6 +6,7 @@
 resource "aws_ecr_repository" "app" {
   name                 = var.env
   image_tag_mutability = "MUTABLE"
+  force_delete         = var.force_delete
 
   image_scanning_configuration {
     scan_on_push = true
@@ -20,6 +21,8 @@ resource "aws_ecr_repository" "app" {
 resource "aws_ecr_repository" "fluentbit" {
   name                 = "fluentbit-${var.env}"
   image_tag_mutability = "MUTABLE"
+  force_delete         = var.force_delete
+
 
   image_scanning_configuration {
     scan_on_push = true
