@@ -81,6 +81,12 @@ variable "backup_retention_period" {
   default = 7
 }
 
+variable "auto_minor_version_upgrade" {
+  description = "마이너 버전 엔진 업그레이드 자동 적용"
+  type = bool
+  default = false
+}
+
 variable "skip_final_snapshot" {
   description = "삭제 시 최종 스냅샷 스킵 여부"
   type = bool

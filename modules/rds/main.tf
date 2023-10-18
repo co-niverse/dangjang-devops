@@ -22,6 +22,7 @@ resource "aws_db_instance" "primary" {
   vpc_security_group_ids  = [var.security_group_id]
   apply_immediately       = var.apply_immediately
   backup_retention_period = var.backup_retention_period
+  auto_minor_version_upgrade = var.auto_minor_version_upgrade
 }
 
 # RDS instance - Read Replica
@@ -46,6 +47,7 @@ resource "aws_db_instance" "replica" {
   skip_final_snapshot    = var.skip_final_snapshot
   vpc_security_group_ids = ["${var.security_group_id}"]
   apply_immediately      = var.apply_immediately
+  auto_minor_version_upgrade = var.auto_minor_version_upgrade
 }
 
 # ---------------------------------------------------------

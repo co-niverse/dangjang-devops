@@ -16,6 +16,7 @@ resource "aws_elasticache_replication_group" "redis" {
   port                        = var.port
   subnet_group_name           = aws_elasticache_subnet_group.redis.name
   security_group_ids          = var.security_group_ids
+  auto_minor_version_upgrade = var.auto_minor_version_upgrade
   # user_group_ids              = [aws_elasticache_user_group.redis[0].id]
 }
 
