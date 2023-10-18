@@ -145,8 +145,7 @@ module "notification_lambda_log_goup" {
 module "elasticache_redis" {
   source = "../../modules/elasticache"
 
-  # preffered_cluster_azs          = [for i in range(var.num_cache_clusters) : element(var.availability_zones, i)]
-  preffered_cluster_azs = var.availability_zones
+  preffered_cluster_azs = [for i in range(var.num_cache_clusters) : element(var.availability_zones, i)]
   group_id              = "redis-group-${var.env}"
   node_type             = var.node_type
   num_cache_clusters    = var.num_cache_clusters
