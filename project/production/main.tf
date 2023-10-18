@@ -54,6 +54,7 @@ module "route53" {
   domain              = var.domain
   mongo_private_ip    = module.ec2.mongo_primary_private_ip
   rds_endpoint        = module.rds.rds_endpoint
+  cache_endpoint      = module.elasticache_redis.primary_endpoint
   api_dns_name        = module.elb.elb_dns_name
   api_zone_id         = module.elb.elb_zone_id
 }
@@ -61,8 +62,8 @@ module "route53" {
 module "kinesis" {
   source = "../../modules/kinesis"
 
-  env         = var.env
-  log_shard_count = var.log_shard_count
+  env                      = var.env
+  log_shard_count          = var.log_shard_count
   notification_shard_count = var.notification_shard_count
 }
 
@@ -105,11 +106,49 @@ module "rds" {
   env                = var.env
   storage_size       = var.rds_storage_size
   instance_type      = var.rds_instance_type
-  multi_az           = var.rds_multi_az
+  multi_az           = false
   username           = var.rds_username
   password           = var.rds_password
-  create_replica     = var.create_replica
-  create_snapshot    = var.create_snapshot
+  create_replica     = false
+  create_snapshot    = false
   security_group_id  = module.vpc.rds_sg
   private_db_subnets = module.vpc.private_db_subnets
+}
+
+module "notification_lambda" {
+  source = "../../modules/lambda"
+
+  role_name              = var.notification_lambda_role_name
+  dir                    = true
+  dir_path               = var.notification_function_dir_path
+  zip_path               = var.notification_function_zip_path
+  function_name          = "notification-lambda-${var.env}"
+  handler_name           = var.notification_handler
+  environment            = var.notification_environment
+  layer_names            = [var.fcm_layer_name]
+  create_kinesis_trigger = true
+  kinesis_arn            = module.kinesis.notification_arn
+}
+
+module "notification_lambda_log_goup" {
+  source = "../../modules/cloudwatch"
+
+  log_group_name = "/aws/lambda/${module.notification_lambda.function_name}"
+  retention_days = 3
+}
+
+module "elasticache_redis" {
+  source = "../../modules/elasticache"
+
+  # preffered_cluster_azs          = [for i in range(var.num_cache_clusters) : element(var.availability_zones, i)]
+  preffered_cluster_azs = var.availability_zones
+  group_id              = "redis-group-${var.env}"
+  node_type             = var.node_type
+  num_cache_clusters    = var.num_cache_clusters
+  security_group_ids    = [module.vpc.cache_sg]
+  subnet_group_name     = "redis-subnet-group-${var.env}"
+  subnet_ids            = module.vpc.private_db_subnets
+  user_id               = var.user_id
+  user_name             = var.user_name
+  passwords             = var.passwords
 }

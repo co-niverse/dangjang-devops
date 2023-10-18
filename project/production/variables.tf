@@ -99,10 +99,6 @@ variable "rds_instance_type" {
   type = string
 }
 
-variable "rds_multi_az" {
-  type = bool
-}
-
 variable "rds_username" {
   type = string
 }
@@ -111,19 +107,49 @@ variable "rds_password" {
   type = string
 }
 
-variable "create_replica" {
-  type = bool
-}
-
-variable "create_snapshot" {
-  type = bool
-}
 
 ### Lambda
-variable "file_path" {
+variable "notification_lambda_role_name" {
   type = string
 }
 
-variable "zip_path" {
+variable "notification_function_dir_path" {
   type = string
+}
+
+variable "notification_function_zip_path" {
+  type = string
+}
+
+variable "notification_handler" {
+  type = string
+}
+
+variable "notification_environment" {
+  type = map(string)
+}
+
+variable "fcm_layer_name" {
+  type = string
+}
+
+### ElastiCache
+variable "node_type" {
+  type = string
+}
+
+variable "num_cache_clusters" {
+  type = number
+}
+
+variable "user_id" {
+  type = string
+}
+
+variable "user_name" {
+  type = string
+}
+  
+variable "passwords" {
+  type = list(string)
 }
