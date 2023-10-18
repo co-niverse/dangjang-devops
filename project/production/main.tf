@@ -103,16 +103,21 @@ module "ec2" {
 module "rds" {
   source = "../../modules/rds"
 
-  env                = var.env
-  storage_size       = var.rds_storage_size
-  instance_type      = var.rds_instance_type
-  multi_az           = false
-  username           = var.rds_username
-  password           = var.rds_password
-  create_replica     = false
-  create_snapshot    = false
-  security_group_id  = module.vpc.rds_sg
-  private_db_subnets = module.vpc.private_db_subnets
+  env                     = var.env
+  primary_instance_name   = "rds-primary-${var.env}"
+  replica_instance_name   = "rds-replica-${var.env}"
+  snapshot_name           = "rds-snapshot-${var.env}"
+  db_subnet_group_name    = "rds-sg-${var.env}"
+  db_parameter_group_name = "rds-pg-${var.env}"
+  storage_size            = var.rds_storage_size
+  instance_type           = var.rds_instance_type
+  multi_az                = false
+  username                = var.rds_username
+  password                = var.rds_password
+  create_replica          = false
+  create_snapshot         = false
+  security_group_id       = module.vpc.rds_sg
+  private_db_subnets      = module.vpc.private_db_subnets
 }
 
 module "notification_lambda" {
