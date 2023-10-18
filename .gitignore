@@ -9,3 +9,4 @@ function/*.zip
 .vscode
 .DS_Store
 **/layer/**/python
+**/docker-staging.sh
