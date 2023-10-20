@@ -20,10 +20,17 @@ module "s3" {
   env = var.env
 }
 
-module "ecr" {
+### ECR
+module "ecr_app" {
   source = "../../modules/ecr"
 
-  env = var.env
+  name = var.env
+}
+
+module "ecr_fluentbit" {
+  source = "../../modules/ecr"
+
+  name = "fluentbit-${var.env}"
 }
 
 module "ecs" {
@@ -32,8 +39,8 @@ module "ecs" {
   env                      = var.env
   app_security_group       = module.vpc.app_sg
   elb_target_group_arn     = module.elb.elb_target_group_arn
-  app_repository_url       = module.ecr.app_repository_url
-  fluentbit_repository_url = module.ecr.fluentbit_repository_url
+  app_repository_url       = module.ecr_app.repository_url
+  fluentbit_repository_url = module.ecr_fluentbit.repository_url
   desired_count            = var.desired_count
   private_subnets          = module.vpc.private_subnets
   container_cpu            = var.container_cpu
