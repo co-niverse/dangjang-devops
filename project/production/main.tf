@@ -1,3 +1,7 @@
+locals {
+  key_pair_name = "${var.env}-server-key-pair"
+}
+
 module "vpc" {
   source = "../../modules/vpc"
 
@@ -52,7 +56,7 @@ module "route53" {
   create_private_zone = var.create_private_zone
   vpc_id              = module.vpc.vpc_id
   domain              = var.domain
-  mongo_private_ip    = module.ec2.mongo_primary_private_ip
+  mongo_private_ip    = module.mongo-primary.private_ip
   rds_endpoint        = module.rds.rds_endpoint
   cache_endpoint      = module.elasticache_redis.primary_endpoint
   api_dns_name        = module.elb.elb_dns_name
@@ -89,15 +93,29 @@ module "opensearch" {
   master_user_password = var.master_user_password
 }
 
-module "ec2" {
+module "mongo-primary" {
   source = "../../modules/ec2"
 
-  env                       = var.env
-  mongo_instance_type       = var.mongo_instance_type
-  private_db_subnets        = module.vpc.private_db_subnets
-  mongo_security_group_id   = module.vpc.mongo_sg
-  public_bastion_subnet     = module.vpc.public_subnets[0]
-  bastion_security_group_id = module.vpc.bastion_sg
+  instance_type      = var.mongo_instance_type
+  key_name           = local.key_pair_name
+  subnet_id          = module.vpc.private_db_subnets[0]
+  security_group_ids = [module.vpc.mongo_sg]
+  volume_size        = 20
+  ebs_tag_name       = "ebs_mongodb-primary-${var.env}"
+  tag_name           = "mongodb-primary-${var.env}"
+}
+
+module "bastion" {
+  source = "../../modules/ec2"
+
+  instance_type      = var.bastion_instance_type
+  key_name           = local.key_pair_name
+  pulic_ip_enabled   = true
+  subnet_id          = module.vpc.public_subnets[0]
+  security_group_ids = [module.vpc.bastion_sg]
+  volume_size        = 8
+  ebs_tag_name       = "ebs_bastion-${var.env}"
+  tag_name           = "bastion-${var.env}"
 }
 
 module "rds" {

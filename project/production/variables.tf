@@ -90,6 +90,10 @@ variable "mongo_instance_type" {
   type = string
 }
 
+variable "bastion_instance_type" {
+  type = string
+}
+
 ### RDS
 variable "rds_storage_size" {
   type = number

@@ -2,38 +2,25 @@
 #       EC2       #
 ###################
 
-### Mongo
-resource "aws_instance" "mongo" {
-  count         = ("${var.env}" == "prod" || "${var.env}" == "staging") ? 3 : 1
-  ami           = "ami-00fdfe418c69b624a"
-  instance_type = var.mongo_instance_type
-  key_name      = "${var.env}-server-key-pair"
+resource "aws_instance" "instance" {
+  ami                         = var.ami
+  instance_type               = var.instance_type
+  key_name                    = var.key_name
+  associate_public_ip_address = var.pulic_ip_enabled
 
-  subnet_id              = element(var.private_db_subnets, count.index)
-  vpc_security_group_ids = [var.mongo_security_group_id]
+  subnet_id              = var.subnet_id
+  vpc_security_group_ids = var.security_group_ids
 
   ebs_block_device {
-    device_name = "/dev/xvda"
-    volume_size = 30
+    device_name = var.device_name
+    volume_type = var.volume_type
+    volume_size = var.volume_size
+    tags = {
+      Name = var.ebs_tag_name
+    }
   }
 
   tags = {
-    Name = (count.index == 2) ? "mongodb-primary-${var.env}" : "mongodb-secondary${count.index + 1}-${var.env}"
-  }
-}
-
-### Bastion
-resource "aws_instance" "bastion" {
-  count                       = ("${var.env}" == "prod" || "${var.env}" == "staging") ? 1 : 0
-  ami                         = "ami-00fdfe418c69b624a"
-  instance_type               = "t4g.micro"
-  key_name                    = "${var.env}-server-key-pair"
-  associate_public_ip_address = true
-
-  subnet_id              = var.public_bastion_subnet
-  vpc_security_group_ids = [var.bastion_security_group_id]
-
-  tags = {
-    Name = "bastion-${var.env}"
+    Name = var.tag_name
   }
 }

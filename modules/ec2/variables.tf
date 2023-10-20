@@ -2,26 +2,61 @@
 #       EC2       #
 ###################
 
-variable "env" {
+variable "ami" {
+  description = "AMI ID (default: Ubuntu 22.04-arm64 LTS)"
+  type        = string
+  default     = "ami-00fdfe418c69b624a"
+}
+
+variable "instance_type" {
   type = string
 }
 
-variable "mongo_instance_type" {
-  type = string
+variable "key_name" {
+  description = "SSH key-pair name"
+  type        = string
 }
 
-variable "private_db_subnets" {
-  type = list(string)
+variable "pulic_ip_enabled" {
+  description = "Public IP 할당 여부"
+  type        = bool
+  default     = false
 }
 
-variable "mongo_security_group_id" {
-  type = string
+variable "subnet_id" {
+  description = "할당할 Subnet ID"
+  type        = string
 }
 
-variable "public_bastion_subnet" {
-  type = string
+variable "security_group_ids" {
+  description = "할당할 Security Group ID"
+  type        = list(string)
 }
 
-variable "bastion_security_group_id" {
-  type = string
+variable "device_name" {
+  description = "마운트할 디바이스 이름"
+  type        = string
+  default     = "/dev/sda1"
+}
+
+variable "volume_type" {
+  description = "EBS 볼륨 타입"
+  type        = string
+  default     = "gp3"
+}
+
+variable "volume_size" {
+  description = "EBS 볼륨 크기"
+  type        = number
+}
+
+variable "ebs_tag_name" {
+  description = "EBS 볼륨 태그 이름"
+  type        = string
+}
+
+
+variable "tag_name" {
+  description = "할당할 인스턴스 태그 이름"
+  type        = string
 }
