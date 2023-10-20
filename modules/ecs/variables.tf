@@ -8,7 +8,7 @@ variable "cluster_name" {
 }
 
 variable "family" {
-  description = "테스크 정의 family"
+  description = "task 정의 family"
   type        = string
 }
 
@@ -117,7 +117,6 @@ variable "enable_execute_command" {
 variable "launch_type" {
   description = "FARGATE or EC2"
   type        = string
-  default     = "EC2"
 }
 
 variable "desired_count" {
