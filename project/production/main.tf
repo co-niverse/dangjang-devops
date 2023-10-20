@@ -100,6 +100,7 @@ module "opensearch" {
   master_user_password = var.master_user_password
 }
 
+### EC2
 module "mongo-primary" {
   source = "../../modules/ec2"
 

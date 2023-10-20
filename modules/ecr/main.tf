@@ -35,7 +35,7 @@ resource "aws_ecr_repository_policy" "policy" {
 ### Lifecycle
 resource "aws_ecr_lifecycle_policy" "lifecycle" {
   repository = aws_ecr_repository.repo.name
-  policy     = jsonencode({
+  policy = jsonencode({
     rules = [
       {
         rulePriority = 1
