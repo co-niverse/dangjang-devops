@@ -20,3 +20,28 @@ module "notification_lambda_role" {
     module.kinesis_policy.arn
   ]
 }
+
+module "ecs_task_role" {
+  source = "../../../modules/iam-role"
+  role_name = "ecs-task-role"
+  services = [
+    "ecs-tasks.amazonaws.com"
+  ]
+  role_policy_arns = [
+    module.ecs_task_policy.arn,
+    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+    "arn:aws:iam::aws:policy/AmazonRDSFullAccess",
+    "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+  ]
+}
+
+module "ecs_task_execution_role" {
+  source = "../../../modules/iam-role"
+  role_name = "ecs-task-execution-role"
+  services = [
+    "ecs-tasks.amazonaws.com"
+  ]
+  role_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  ]
+}

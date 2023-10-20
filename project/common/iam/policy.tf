@@ -41,3 +41,24 @@ module "kinesis_policy" {
     ]
   })
 }
+
+module "ecs_task_policy" {
+  source      = "../../../modules/iam-policy"
+  policy_name = "dangjang-ecs-task-policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel",
+          "kinesis:PutRecords"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
