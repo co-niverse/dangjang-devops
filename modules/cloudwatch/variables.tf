@@ -3,10 +3,12 @@
 ###################
 
 variable "log_group_name" {
-  type = string
+  description = "로그 그룹 이름"
+  type        = string
 }
 
 variable "retention_days" {
-  default = 7
-  type = number
+  description = "로그 보존 기간"
+  type        = number
+  default     = 7
 }
