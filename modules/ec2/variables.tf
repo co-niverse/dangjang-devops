@@ -9,6 +9,7 @@ variable "ami" {
 }
 
 variable "instance_type" {
+  description = "인스턴스 타입"
   type = string
 }
 
@@ -54,7 +55,6 @@ variable "ebs_tag_name" {
   description = "EBS 볼륨 태그 이름"
   type        = string
 }
-
 
 variable "tag_name" {
   description = "할당할 인스턴스 태그 이름"
