@@ -33,18 +33,42 @@ module "ecr_fluentbit" {
   name = "fluentbit-${var.env}"
 }
 
+### ECS
 module "ecs" {
   source = "../../modules/ecs"
 
-  env                      = var.env
-  app_security_group       = module.vpc.app_sg
-  elb_target_group_arn     = module.elb.elb_target_group_arn
-  app_repository_url       = module.ecr_app.repository_url
-  fluentbit_repository_url = module.ecr_fluentbit.repository_url
-  desired_count            = var.desired_count
-  private_subnets          = module.vpc.private_subnets
-  container_cpu            = var.container_cpu
-  container_memory         = var.container_memory
+  # cluster
+  cluster_name = "ecs-cluster-${var.env}"
+
+  # task
+  family                    = "ecs-template-app-${var.env}"
+  task_cpu                  = 4096
+  task_memory               = 8192
+  app_container_name        = "app-container-${var.env}"
+  app_repository_url        = module.ecr_app.repository_url
+  app_cpu                   = 2048
+  app_memory                = 4096
+  app_container_port        = 8080
+  app_container_health_port = 8081
+  fluentbit_container_name  = "fluentbit-container-${var.env}"
+  fluentbit_repository_url  = module.ecr_fluentbit.repository_url
+  fluentbit_cpu             = 512
+  fluentbit_memory          = 512
+  fluentbit_port            = 8888
+  fluentbit_environment = [
+    {
+      name  = "env"
+      value = "${var.env}"
+    }
+  ]
+
+  # service
+  service_name         = "ecs-service-${var.env}"
+  launch_type          = "FARGATE"
+  desired_count        = var.desired_count
+  subnets              = [for i in range(var.desired_count) : element(module.vpc.private_subnets, i)]
+  security_group       = [module.vpc.app_sg]
+  elb_target_group_arn = module.elb.elb_target_group_arn
 }
 
 module "elb" {

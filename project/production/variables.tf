@@ -42,14 +42,6 @@ variable "desired_count" {
   type = number
 }
 
-variable "container_cpu" {
-  type = number
-}
-
-variable "container_memory" {
-  type = number
-}
-
 ### ELB
 variable "acm_domain" {
   type = string

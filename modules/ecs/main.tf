@@ -2,87 +2,91 @@
 #       ECS       #
 ###################
 
+# ECS role
+data "aws_iam_role" "ecs_task" {
+  name = "ecs-task-role"
+}
+
+data "aws_iam_role" "ecs_task_execution" {
+  name = "ecs-task-execution-role"
+}
+
 # ECS Cluster
-resource "aws_ecs_cluster" "app" {
-  name = "ecs-cluster-${var.env}"
+resource "aws_ecs_cluster" "cluster" {
+  name = var.cluster_name
   tags = {
-    Name = "ecs-cluster-${var.env}"
+    Name = var.cluster_name
   }
 }
 
-# ECS Service - api
-resource "aws_ecs_service" "api" {
-  name                   = "ecs-service-api-${var.env}"
-  cluster                = aws_ecs_cluster.app.name
-  task_definition        = aws_ecs_task_definition.api.arn
-  enable_execute_command = true # 컨테이너 접속 허용
-  launch_type            = "FARGATE"
-  desired_count          = var.desired_count # task 실행 횟수
-  health_check_grace_period_seconds = 180 # 상태 확인 대기 시간
-
-  network_configuration {
-    subnets         = var.private_subnets # 서브넷 등록
-    security_groups = ["${var.app_security_group}"]
-  }
-
-  load_balancer {
-    target_group_arn = var.elb_target_group_arn
-    container_name   = "api-container-${var.env}"
-    container_port   = 8080
-  }
-}
-
-# ECS Task Definition - api
-resource "aws_ecs_task_definition" "api" {
-  family                   = "ecs-template-api-${var.env}"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = var.container_cpu
-  memory                   = var.container_memory
-  task_role_arn            = aws_iam_role.ecs_task_role.arn
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+# ECS Task Definition
+resource "aws_ecs_task_definition" "task" {
+  family                   = var.family
+  network_mode             = var.network_mode
+  cpu                      = var.task_cpu
+  memory                   = var.task_memory
+  task_role_arn            = data.aws_iam_role.ecs_task.arn
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution.arn
 
   runtime_platform {
-    cpu_architecture = "ARM64"
+    operating_system_family = var.operating_system_family
+    cpu_architecture        = var.cpu_architecture
   }
 
   container_definitions = jsonencode([
     {
+      name      = var.app_container_name
       essential = true
-      name      = "api-container-${var.env}"
       image     = "${var.app_repository_url}:latest"
-      cpu       = 2048
-      memory    = 4096
+      cpu       = var.app_cpu
+      memory    = var.app_memory
 
       portMappings = [
         {
-          containerPort = 8080
-          hostPort      = 8080
+          containerPort = var.app_container_port
+          hostPort      = var.app_container_port
         },
         {
-          containerPort = 8081
-          hostPort      = 8081
+          containerPort = var.app_container_health_port
+          hostPort      = var.app_container_health_port
         }
       ]
     },
     {
+      name      = var.fluentbit_container_name
       essential = true
-      name      = "fluentbit-container-${var.env}"
       image     = "${var.fluentbit_repository_url}:latest"
-      cpu       = 512
-      memory    = 512
-      environment = [
-        {
-          name  = "env"
-          value = "${var.env}"
-        }
-      ]
+      cpu       = var.fluentbit_cpu
+      memory    = var.fluentbit_memory
       portMappings = [
         {
-          containerPort = 8888
-          hostPort      = 8888
+          containerPort = var.fluentbit_port
+          hostPort      = var.fluentbit_port
         }
       ]
+      environment = var.fluentbit_environment
     }
   ])
+}
+
+# ECS Service
+resource "aws_ecs_service" "service" {
+  name                              = var.service_name
+  cluster                           = aws_ecs_cluster.cluster.name
+  task_definition                   = aws_ecs_task_definition.task.arn
+  enable_execute_command            = var.enable_execute_command
+  launch_type                       = var.launch_type
+  desired_count                     = var.desired_count
+  health_check_grace_period_seconds = var.health_check_grace_period_seconds
+
+  network_configuration {
+    subnets         = var.subnets
+    security_groups = var.security_group
+  }
+
+  load_balancer {
+    target_group_arn = var.elb_target_group_arn
+    container_name   = var.app_container_name
+    container_port   = var.app_container_port
+  }
 }
