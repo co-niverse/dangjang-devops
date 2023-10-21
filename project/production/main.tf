@@ -99,12 +99,26 @@ module "route53" {
   api_zone_id         = module.elb.zone_id
 }
 
-module "kinesis" {
+### Kinesis
+module "kinesis_client_log" {
   source = "../../modules/kinesis"
 
-  env                      = var.env
-  log_shard_count          = var.log_shard_count
-  notification_shard_count = var.notification_shard_count
+  name        = "kn-client-log-${var.env}"
+  shard_count = 1
+}
+
+module "kinesis_server_log" {
+  source = "../../modules/kinesis"
+
+  name        = "kn-server-log-${var.env}"
+  shard_count = 1
+}
+
+module "kinesis_notification" {
+  source = "../../modules/kinesis"
+
+  name        = "kn-notification-${var.env}"
+  shard_count = 1
 }
 
 ### Firehose
@@ -113,7 +127,7 @@ module "firehose_client_log_s3" {
 
   name               = "fh-client-log-s3-stream-${var.env}"
   destination        = "extended_s3"
-  kinesis_stream_arn = module.kinesis.client_log_arn
+  kinesis_stream_arn = module.kinesis_client_log.arn
   configuration = {
     extended_s3 = {
       bucket_arn         = module.s3.client_log_arn
@@ -127,7 +141,7 @@ module "firehose_client_log_opensearch" {
 
   name               = "fh-client-log-opensearch-stream-${var.env}"
   destination        = "opensearch"
-  kinesis_stream_arn = module.kinesis.client_log_arn
+  kinesis_stream_arn = module.kinesis_client_log.arn
   configuration = {
     opensearch = {
       bucket_arn         = module.s3.client_log_arn
@@ -144,7 +158,7 @@ module "firehose_server_log_s3" {
 
   name               = "fh-server-log-s3-stream-${var.env}"
   destination        = "extended_s3"
-  kinesis_stream_arn = module.kinesis.server_log_arn
+  kinesis_stream_arn = module.kinesis_server_log.arn
   configuration = {
     extended_s3 = {
       bucket_arn         = module.s3.server_log_arn
@@ -158,7 +172,7 @@ module "firehose_server_log_opensearch" {
 
   name               = "fh-server-log-opensearch-stream-${var.env}"
   destination        = "opensearch"
-  kinesis_stream_arn = module.kinesis.server_log_arn
+  kinesis_stream_arn = module.kinesis_server_log.arn
   configuration = {
     opensearch = {
       bucket_arn         = module.s3.server_log_arn
@@ -239,7 +253,7 @@ module "notification_lambda" {
   environment            = var.notification_environment
   layer_names            = [var.fcm_layer_name]
   create_kinesis_trigger = true
-  kinesis_arn            = module.kinesis.notification_arn
+  kinesis_arn            = module.kinesis_notification.arn
 }
 
 module "notification_lambda_log_goup" {
