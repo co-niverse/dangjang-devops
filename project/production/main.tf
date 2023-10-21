@@ -93,7 +93,7 @@ module "route53" {
   vpc_id              = module.vpc.vpc_id
   domain              = var.domain
   mongo_private_ip    = module.mongo-primary.private_ip
-  rds_endpoint        = module.rds.rds_endpoint
+  rds_endpoint        = module.rds.primary_endpoint
   cache_endpoint      = module.elasticache_redis.primary_endpoint
   api_dns_name        = module.elb.dns_name
   api_zone_id         = module.elb.zone_id
@@ -223,24 +223,25 @@ module "bastion" {
   tag_name           = "bastion-${var.env}"
 }
 
+### RDS
 module "rds" {
   source = "../../modules/rds"
 
-  env                     = var.env
-  primary_instance_name   = "rds-primary-${var.env}"
-  replica_instance_name   = "rds-replica-${var.env}"
-  snapshot_name           = "rds-snapshot-${var.env}"
-  db_subnet_group_name    = "rds-sg-${var.env}"
-  db_parameter_group_name = "rds-pg-${var.env}"
-  storage_size            = var.rds_storage_size
-  instance_type           = var.rds_instance_type
-  multi_az                = false
-  username                = var.rds_username
-  password                = var.rds_password
-  create_replica          = false
-  create_snapshot         = false
-  security_group_id       = module.vpc.rds_sg
-  private_db_subnets      = module.vpc.private_db_subnets
+  primary_instance_name = "rds-primary-${var.env}"
+  storage_size          = 50
+  instance_class        = var.rds_instance_type
+  multi_az              = false
+  username              = var.rds_username
+  password              = var.rds_password
+  db_name               = var.env
+  security_group_ids    = [module.vpc.rds_sg]
+  create_replica        = false
+  replica_instance_name = "rds-replica-${var.env}"
+  create_snapshot       = false
+  snapshot_name         = "rds-snapshot-${var.env}"
+  subnet_group_name     = "rds-sg-${var.env}"
+  subnet_ids            = module.vpc.private_db_subnets
+  parameter_group_name  = "rds-pg-${var.env}"
 }
 
 ### Lambda

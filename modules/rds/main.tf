@@ -8,20 +8,20 @@ resource "aws_db_instance" "primary" {
   allocated_storage = var.storage_size
   engine            = var.engine
   engine_version    = var.engine_version
-  instance_class    = var.instance_type
+  instance_class    = var.instance_class
   storage_type      = var.stoarge_type
   multi_az          = var.multi_az
 
   username = var.username
   password = var.password
-  db_name  = var.env
+  db_name  = var.db_name
 
-  parameter_group_name    = aws_db_parameter_group.rds.name
-  db_subnet_group_name    = aws_db_subnet_group.rds.name
-  skip_final_snapshot     = var.skip_final_snapshot
-  vpc_security_group_ids  = [var.security_group_id]
-  apply_immediately       = var.apply_immediately
-  backup_retention_period = var.backup_retention_period
+  parameter_group_name       = aws_db_parameter_group.rds.name
+  db_subnet_group_name       = aws_db_subnet_group.rds.name
+  skip_final_snapshot        = var.skip_final_snapshot
+  vpc_security_group_ids     = var.security_group_ids
+  apply_immediately          = var.apply_immediately
+  backup_retention_period    = var.backup_retention_period
   auto_minor_version_upgrade = var.auto_minor_version_upgrade
 }
 
@@ -34,19 +34,19 @@ resource "aws_db_instance" "replica" {
   allocated_storage = var.storage_size
   engine            = var.engine
   engine_version    = var.engine_version
-  instance_class    = var.instance_type
+  instance_class    = var.instance_class
   storage_type      = var.stoarge_type
   multi_az          = var.multi_az
 
   username = var.username
   password = var.password
-  db_name  = var.env
+  db_name  = var.db_name
 
-  parameter_group_name   = aws_db_parameter_group.rds.name
-  db_subnet_group_name   = aws_db_subnet_group.rds.name
-  skip_final_snapshot    = var.skip_final_snapshot
-  vpc_security_group_ids = ["${var.security_group_id}"]
-  apply_immediately      = var.apply_immediately
+  parameter_group_name       = aws_db_parameter_group.rds.name
+  db_subnet_group_name       = aws_db_subnet_group.rds.name
+  skip_final_snapshot        = var.skip_final_snapshot
+  vpc_security_group_ids     = var.security_group_ids
+  apply_immediately          = var.apply_immediately
   auto_minor_version_upgrade = var.auto_minor_version_upgrade
 }
 
@@ -60,68 +60,36 @@ resource "aws_db_snapshot" "rds" {
 
 # Subnet Group
 resource "aws_db_subnet_group" "rds" {
-  name       = var.db_subnet_group_name
-  subnet_ids = var.private_db_subnets
+  name       = var.subnet_group_name
+  subnet_ids = var.subnet_ids
 
   lifecycle {
     create_before_destroy = true
   }
+
   tags = {
-    Name = var.db_subnet_group_name
+    Name = var.subnet_group_name
   }
 }
 
 # Parameter Group
 resource "aws_db_parameter_group" "rds" {
-  name        = var.db_parameter_group_name
-  family      = var.db_parameter_family
-  description = "RDS Parameter Group-${var.env}"
+  name        = var.parameter_group_name
+  family      = var.parameter_family
+  description = "RDS Parameter Group"
 
-  parameter {
-    name  = "character_set_server"
-    value = "utf8"
+  dynamic "parameter" {
+    for_each = var.parameters
+    content {
+      name         = parameter.value.name
+      value        = parameter.value.value
+      apply_method = parameter.value.apply_method
+    }
   }
 
-  parameter {
-    name  = "character_set_client"
-    value = "utf8"
-  }
-
-  parameter {
-    name  = "character_set_connection"
-    value = "utf8"
-  }
-
-  parameter {
-    name  = "character_set_database"
-    value = "utf8"
-  }
-
-  parameter {
-    name  = "character_set_results"
-    value = "utf8"
-  }
-
-  parameter {
-    name         = "collation_connection"
-    value        = "utf8_general_ci"
-    apply_method = "pending-reboot"
-  }
-
-  parameter {
-    name         = "collation_server"
-    value        = "utf8_general_ci"
-    apply_method = "pending-reboot"
-  }
-
-  parameter {
-    name         = "lower_case_table_names"
-    value        = "1"
-    apply_method = "pending-reboot"
-  }
-
-  parameter {
-    name  = "time_zone"
-    value = "Asia/Seoul"
+  lifecycle {
+    ignore_changes = [
+      description
+    ]
   }
 }

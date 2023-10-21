@@ -70,10 +70,6 @@ variable "bastion_instance_type" {
 }
 
 ### RDS
-variable "rds_storage_size" {
-  type = number
-}
-
 variable "rds_instance_type" {
   type = string
 }
