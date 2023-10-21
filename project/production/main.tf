@@ -241,21 +241,23 @@ module "rds" {
   private_db_subnets      = module.vpc.private_db_subnets
 }
 
+### Lambda
 module "notification_lambda" {
   source = "../../modules/lambda"
 
-  role_name              = var.notification_lambda_role_name
+  role_name              = "notification-lambda-role"
+  layer_names            = ["fcm_layer"]
   dir                    = true
-  dir_path               = var.notification_function_dir_path
-  zip_path               = var.notification_function_zip_path
+  dir_path               = "../../function/notification/"
+  zip_path               = "../../function/notification.zip"
   function_name          = "notification-lambda-${var.env}"
-  handler_name           = var.notification_handler
+  handler_name           = "notification.lambda_handler"
   environment            = var.notification_environment
-  layer_names            = [var.fcm_layer_name]
   create_kinesis_trigger = true
   kinesis_arn            = module.kinesis_notification.arn
 }
 
+### Log group
 module "notification_lambda_log_goup" {
   source = "../../modules/cloudwatch"
 

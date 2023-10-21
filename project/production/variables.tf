@@ -103,30 +103,9 @@ variable "rds_password" {
   type = string
 }
 
-
 ### Lambda
-variable "notification_lambda_role_name" {
-  type = string
-}
-
-variable "notification_function_dir_path" {
-  type = string
-}
-
-variable "notification_function_zip_path" {
-  type = string
-}
-
-variable "notification_handler" {
-  type = string
-}
-
 variable "notification_environment" {
   type = map(string)
-}
-
-variable "fcm_layer_name" {
-  type = string
 }
 
 ### ElastiCache
