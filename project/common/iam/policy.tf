@@ -62,3 +62,47 @@ module "ecs_task_policy" {
     ]
   })
 }
+
+module "s3_policy" {
+  source = "../../../modules/iam-policy"
+  policy_name = "dangjang-s3-policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:AbortMultipartUpload",
+          "s3:GetBucketLocation",
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads",
+          "s3:PutObject"
+        ],
+        Resource = "*"
+      }
+    ]
+  })  
+}
+
+module "opensearch_policy" {
+  source = "../../../modules/iam-policy"
+  policy_name = "dangjang-opensearch-policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "es:DescribeDomain",
+          "es:DescribeDomains",
+          "es:DescribeDomainConfig",
+          "es:ESHttpPost",
+          "es:ESHttpPut",
+          "es:ESHttpGet"
+        ],
+        Resource = "*"
+      }
+    ]
+  })  
+}

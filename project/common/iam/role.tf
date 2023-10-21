@@ -45,3 +45,17 @@ module "ecs_task_execution_role" {
     "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
   ]
 }
+
+module "firehose_role" {
+  source    = "../../../modules/iam-role"
+  role_name = "firehose-role"
+  services = [
+    "firehose.amazonaws.com"
+  ]
+  role_policy_arns = [
+    module.s3_policy.arn,
+    module.kinesis_policy.arn,
+    module.log_group_policy.arn,
+    module.opensearch_policy.arn
+  ]
+}
