@@ -2,63 +2,65 @@
 #       ELB       #
 ###################
 
+# ELB
 resource "aws_lb" "default" {
-  name               = "elb-${var.env}"
-  internal           = false
-  load_balancer_type = "application" # ALB
-  security_groups    = ["${var.default_sg}"]
-  subnets            = var.public_subnets
+  name               = var.elb_name
+  internal           = var.internal
+  load_balancer_type = var.load_balancer_type
+  security_groups    = var.security_groups
+  subnets            = var.subnets
 
   lifecycle {
     create_before_destroy = true
   }
 
   tags = {
-    Name = "elb-${var.env}"
+    Name = var.elb_name
   }
 }
 
 # ELB target group
 resource "aws_alb_target_group" "default" {
-  name        = "tg-${var.env}"
-  port        = 8080 # 대상이 수신하는 포트
-  protocol    = "HTTP"
-  target_type = "ip"
+  name        = var.target_group_name
+  target_type = var.target_type
+  port        = var.target_port
+  protocol    = var.target_protocol
   vpc_id      = var.vpc_id
 
   health_check { # 상태 확인
-    port                = 8081               # 상태 확인 포트
-    interval            = 300                # 주기 (sec)
-    path                = "/actuator/health" # ping 경로
-    matcher             = "200"              # 상태 확인 성공 코드
-    healthy_threshold   = 2                  # 정상 간주 성공 횟수
-    unhealthy_threshold = 2                  # 비정상 간주 실패 횟수
-  }
-
-  tags = {
-    Name = "tg-${var.env}"
+    port                = var.health_check_port
+    interval            = var.interval
+    path                = var.ping_path
+    matcher             = var.matcher
+    healthy_threshold   = var.healthy_threshold
+    unhealthy_threshold = var.unhealthy_threshold
   }
 
   lifecycle {
     create_before_destroy = true
   }
+
+  tags = {
+    Name = var.target_group_name
+  }
+}
+
+# 활성화된 도메인 인증서 가져오기
+data "aws_acm_certificate" "acm" { 
+  domain   = var.certificate_domain
+  statuses = ["ISSUED"]
 }
 
 # ELB listener
 resource "aws_alb_listener" "default" {
   load_balancer_arn = aws_lb.default.arn
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06" # ssl 정책
-  certificate_arn   = data.aws_acm_certificate.acm.arn      #인증서
+  port              = var.listener_port
+  protocol          = var.listener_protocol
+  ssl_policy        = var.ssl_policy
+  certificate_arn   = data.aws_acm_certificate.acm.arn
 
   default_action {
-    type             = "forward" # 대상 그룹에 포워딩
+    type             = "forward"
     target_group_arn = aws_alb_target_group.default.arn
   }
-}
-
-data "aws_acm_certificate" "acm" { # 활성화된 도메인 인증서 가져오기
-  domain   = var.domain
-  statuses = ["ISSUED"]
 }

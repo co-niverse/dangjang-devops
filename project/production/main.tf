@@ -68,17 +68,22 @@ module "ecs" {
   desired_count        = var.desired_count
   subnets              = [for i in range(var.desired_count) : element(module.vpc.private_subnets, i)]
   security_group       = [module.vpc.app_sg]
-  elb_target_group_arn = module.elb.elb_target_group_arn
+  elb_target_group_arn = module.elb.target_group_arn
 }
 
+# ELB
 module "elb" {
   source = "../../modules/elb"
 
-  env            = var.env
-  vpc_id         = module.vpc.vpc_id
-  public_subnets = module.vpc.public_subnets
-  default_sg     = module.vpc.default_sg
-  domain         = var.acm_domain
+  elb_name           = "elb-${var.env}"
+  subnets            = module.vpc.public_subnets
+  security_groups    = [module.vpc.default_sg]
+  target_group_name  = "tg-${var.env}"
+  target_port        = 8080
+  vpc_id             = module.vpc.vpc_id
+  health_check_port  = 8081
+  ping_path          = "/actuator/health"
+  certificate_domain = var.acm_domain
 }
 
 module "route53" {
@@ -90,8 +95,8 @@ module "route53" {
   mongo_private_ip    = module.mongo-primary.private_ip
   rds_endpoint        = module.rds.rds_endpoint
   cache_endpoint      = module.elasticache_redis.primary_endpoint
-  api_dns_name        = module.elb.elb_dns_name
-  api_zone_id         = module.elb.elb_zone_id
+  api_dns_name        = module.elb.dns_name
+  api_zone_id         = module.elb.zone_id
 }
 
 module "kinesis" {
@@ -192,6 +197,7 @@ module "notification_lambda_log_goup" {
   retention_days = 3
 }
 
+# ElastiCache
 module "elasticache_redis" {
   source = "../../modules/elasticache"
 
