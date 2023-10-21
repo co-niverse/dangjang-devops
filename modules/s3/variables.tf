@@ -2,6 +2,7 @@
 #       S3        #
 ###################
 
-variable "env" {
-  type = string
+variable "bucket_name" {
+  description = "S3 bucket 이름"
+  type        = string
 }

@@ -14,11 +14,24 @@ module "vpc" {
   env                     = var.env
 }
 
-module "s3" {
+### S3
+module "s3_client_log" {
   source = "../../modules/s3"
 
-  env = var.env
+  bucket_name = "dangjang.client.log-${var.env}"
 }
+
+module "s3_server_log" {
+  source = "../../modules/s3"
+
+  bucket_name = "dangjang.server.log-${var.env}"
+}
+
+# module "s3_user_image" {
+#   source = "../../modules/s3"
+
+#   bucket_name = "dangjang.user.image-${var.env}"
+# }
 
 ### ECR
 module "ecr_app" {
@@ -86,6 +99,7 @@ module "elb" {
   certificate_domain = var.acm_domain
 }
 
+### Route53
 module "route53" {
   source = "../../modules/route53"
 
@@ -130,7 +144,7 @@ module "firehose_client_log_s3" {
   kinesis_stream_arn = module.kinesis_client_log.arn
   configuration = {
     extended_s3 = {
-      bucket_arn         = module.s3.client_log_arn
+      bucket_arn         = module.s3_client_log.arn
       buffering_interval = 300
     }
   }
@@ -144,7 +158,7 @@ module "firehose_client_log_opensearch" {
   kinesis_stream_arn = module.kinesis_client_log.arn
   configuration = {
     opensearch = {
-      bucket_arn         = module.s3.client_log_arn
+      bucket_arn         = module.s3_client_log.arn
       buffering_interval = 300
       domain_arn         = module.log_opensearch.arn
       index_name         = "client-log"
@@ -161,7 +175,7 @@ module "firehose_server_log_s3" {
   kinesis_stream_arn = module.kinesis_server_log.arn
   configuration = {
     extended_s3 = {
-      bucket_arn         = module.s3.server_log_arn
+      bucket_arn         = module.s3_server_log.arn
       buffering_interval = 300
     }
   }
@@ -175,7 +189,7 @@ module "firehose_server_log_opensearch" {
   kinesis_stream_arn = module.kinesis_server_log.arn
   configuration = {
     opensearch = {
-      bucket_arn         = module.s3.server_log_arn
+      bucket_arn         = module.s3_server_log.arn
       buffering_interval = 300
       domain_arn         = module.log_opensearch.arn
       index_name         = "server-log"
