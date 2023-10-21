@@ -79,6 +79,12 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
+variable "create_user" {
+  description = "유저 생성 여부"
+  type        = bool
+  default     = false
+}
+
 variable "user_id" {
   description = "elasticache 유저 ID"
   type        = string
@@ -98,10 +104,4 @@ variable "access_string" {
 variable "passwords" {
   description = "elasticache 유저 비밀번호"
   type        = list(string)
-}
-
-variable "create_user" {
-  description = "유저 생성 여부"
-  type        = bool
-  default     = false
 }

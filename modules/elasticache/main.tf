@@ -11,12 +11,13 @@ resource "aws_elasticache_replication_group" "redis" {
   preferred_cache_cluster_azs = var.preffered_cluster_azs
   node_type                   = var.node_type
   num_cache_clusters          = var.num_cache_clusters
+  engine                      = var.engine
   engine_version              = var.engine_version
   parameter_group_name        = var.parameter_group_name
   port                        = var.port
   subnet_group_name           = aws_elasticache_subnet_group.redis.name
   security_group_ids          = var.security_group_ids
-  auto_minor_version_upgrade = var.auto_minor_version_upgrade
+  auto_minor_version_upgrade  = var.auto_minor_version_upgrade
   # user_group_ids              = [aws_elasticache_user_group.redis[0].id]
 }
 

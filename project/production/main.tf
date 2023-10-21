@@ -272,8 +272,8 @@ module "notification_lambda_log_goup" {
 module "elasticache_redis" {
   source = "../../modules/elasticache"
 
-  preffered_cluster_azs = [for i in range(var.num_cache_clusters) : element(var.availability_zones, i)]
   group_id              = "redis-group-${var.env}"
+  preffered_cluster_azs = [for i in range(var.num_cache_clusters) : element(var.availability_zones, i)]
   node_type             = var.node_type
   num_cache_clusters    = var.num_cache_clusters
   security_group_ids    = [module.vpc.cache_sg]
