@@ -47,26 +47,9 @@ variable "acm_domain" {
   type = string
 }
 
-### Kinesis
-variable "log_shard_count" {
-  type = number
-}
-
-variable "notification_shard_count" {
-  type = number
-}
-
 ### OpenSearch
 variable "instance_type" {
   type = string
-}
-
-variable "instance_count" {
-  type = number
-}
-
-variable "volume_size" {
-  type = number
 }
 
 variable "master_user_name" {

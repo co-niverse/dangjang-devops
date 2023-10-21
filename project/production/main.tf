@@ -146,7 +146,7 @@ module "firehose_client_log_opensearch" {
     opensearch = {
       bucket_arn         = module.s3.client_log_arn
       buffering_interval = 300
-      domain_arn         = module.opensearch.log_opensearch_arn
+      domain_arn         = module.log_opensearch.arn
       index_name         = "client-log"
       s3_backup_mode     = "FailedDocumentsOnly"
     }
@@ -177,20 +177,22 @@ module "firehose_server_log_opensearch" {
     opensearch = {
       bucket_arn         = module.s3.server_log_arn
       buffering_interval = 300
-      domain_arn         = module.opensearch.log_opensearch_arn
+      domain_arn         = module.log_opensearch.arn
       index_name         = "server-log"
       s3_backup_mode     = "FailedDocumentsOnly"
     }
   }
 }
 
-module "opensearch" {
+### OpenSearch
+module "log_opensearch" {
   source = "../../modules/opensearch"
 
-  env                  = var.env
+  name                 = "os-log-${var.env}"
   instance_type        = var.instance_type
-  instance_count       = var.instance_count
-  volume_size          = var.volume_size
+  instance_count       = 1
+  ebs_enabled          = true
+  volume_size          = 20
   master_user_name     = var.master_user_name
   master_user_password = var.master_user_password
 }
