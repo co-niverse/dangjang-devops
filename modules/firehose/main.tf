@@ -2,83 +2,43 @@
 #    Firehose     #
 ###################
 
-# Client-log S3
-resource "aws_kinesis_firehose_delivery_stream" "client_log_s3_stream" {
-  name        = "fh-client-log-s3-stream-${var.env}"
-  destination = "extended_s3"
-
-  kinesis_source_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    kinesis_stream_arn = var.client_log_kinesis_arn
-  }
-
-  extended_s3_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    bucket_arn         = var.client_log_bucket_arn
-    buffering_interval = 60
-
-  }
+# Firehose role
+data "aws_iam_role" "firehose" {
+  name = "firehose-role"
 }
 
-# Client-log OpenSearch
-resource "aws_kinesis_firehose_delivery_stream" "client_log_opensearch_stream" {
-  name        = "fh-client-log-opensearch-stream-${var.env}"
-  destination = "opensearch"
+# Firehose
+resource "aws_kinesis_firehose_delivery_stream" "stream" {
+  name        = var.name
+  destination = var.destination
 
   kinesis_source_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    kinesis_stream_arn = var.client_log_kinesis_arn
+    role_arn           = data.aws_iam_role.firehose.arn
+    kinesis_stream_arn = var.kinesis_stream_arn
   }
 
-  opensearch_configuration {
-    role_arn       = aws_iam_role.firehose_role.arn
-    domain_arn     = var.log_opensearch_arn
-    index_name     = "client-log"
-    s3_backup_mode = "FailedDocumentsOnly"
-
-    s3_configuration {
-      role_arn   = aws_iam_role.firehose_role.arn
-      bucket_arn = var.client_log_bucket_arn
+  dynamic "extended_s3_configuration" {
+    for_each = var.destination == "extended_s3" ? var.configuration : {}
+    content {
+      role_arn           = data.aws_iam_role.firehose.arn
+      bucket_arn         = extended_s3_configuration.value.bucket_arn
+      buffering_interval = extended_s3_configuration.value.buffering_interval
     }
   }
-}
 
-# Server-log S3
-resource "aws_kinesis_firehose_delivery_stream" "server_log_s3_stream" {
-  name        = "fh-server-log-s3-stream-${var.env}"
-  destination = "extended_s3"
+  dynamic "opensearch_configuration" {
+    for_each = var.destination == "opensearch" ? var.configuration : {}
+    content {
+      role_arn           = data.aws_iam_role.firehose.arn
+      domain_arn         = opensearch_configuration.value.domain_arn
+      index_name         = opensearch_configuration.value.index_name
+      buffering_interval = opensearch_configuration.value.buffering_interval
+      s3_backup_mode     = opensearch_configuration.value.s3_backup_mode
 
-  kinesis_source_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    kinesis_stream_arn = var.server_log_kinesis_arn
-  }
-
-  extended_s3_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    bucket_arn         = var.server_log_bucket_arn
-    buffering_interval = 60
-  }
-}
-
-# Server-log OpenSearch
-resource "aws_kinesis_firehose_delivery_stream" "server_log_opensearch_stream" {
-  name        = "fn-server-log-opensearch-stream-${var.env}"
-  destination = "opensearch"
-
-  kinesis_source_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    kinesis_stream_arn = var.server_log_kinesis_arn
-  }
-
-  opensearch_configuration {
-    role_arn       = aws_iam_role.firehose_role.arn
-    domain_arn     = var.log_opensearch_arn
-    index_name     = "server-log"
-    s3_backup_mode = "FailedDocumentsOnly"
-
-    s3_configuration {
-      role_arn   = aws_iam_role.firehose_role.arn
-      bucket_arn = var.server_log_bucket_arn
+      s3_configuration {
+        role_arn   = data.aws_iam_role.firehose.arn
+        bucket_arn = opensearch_configuration.value.bucket_arn
+      }
     }
   }
 }

@@ -71,7 +71,7 @@ module "ecs" {
   elb_target_group_arn = module.elb.target_group_arn
 }
 
-# ELB
+### ELB
 module "elb" {
   source = "../../modules/elb"
 
@@ -107,15 +107,67 @@ module "kinesis" {
   notification_shard_count = var.notification_shard_count
 }
 
-module "firehose" {
+### Firehose
+module "firehose_client_log_s3" {
   source = "../../modules/firehose"
 
-  env                    = var.env
-  client_log_kinesis_arn = module.kinesis.client_log_arn
-  client_log_bucket_arn  = module.s3.client_log_arn
-  server_log_kinesis_arn = module.kinesis.server_log_arn
-  server_log_bucket_arn  = module.s3.server_log_arn
-  log_opensearch_arn     = module.opensearch.log_opensearch_arn
+  name               = "fh-client-log-s3-stream-${var.env}"
+  destination        = "extended_s3"
+  kinesis_stream_arn = module.kinesis.client_log_arn
+  configuration = {
+    extended_s3 = {
+      bucket_arn         = module.s3.client_log_arn
+      buffering_interval = 300
+    }
+  }
+}
+
+module "firehose_client_log_opensearch" {
+  source = "../../modules/firehose"
+
+  name               = "fh-client-log-opensearch-stream-${var.env}"
+  destination        = "opensearch"
+  kinesis_stream_arn = module.kinesis.client_log_arn
+  configuration = {
+    opensearch = {
+      bucket_arn         = module.s3.client_log_arn
+      buffering_interval = 300
+      domain_arn         = module.opensearch.log_opensearch_arn
+      index_name         = "client-log"
+      s3_backup_mode     = "FailedDocumentsOnly"
+    }
+  }
+}
+
+module "firehose_server_log_s3" {
+  source = "../../modules/firehose"
+
+  name               = "fh-server-log-s3-stream-${var.env}"
+  destination        = "extended_s3"
+  kinesis_stream_arn = module.kinesis.server_log_arn
+  configuration = {
+    extended_s3 = {
+      bucket_arn         = module.s3.server_log_arn
+      buffering_interval = 300
+    }
+  }
+}
+
+module "firehose_server_log_opensearch" {
+  source = "../../modules/firehose"
+
+  name               = "fh-server-log-opensearch-stream-${var.env}"
+  destination        = "opensearch"
+  kinesis_stream_arn = module.kinesis.server_log_arn
+  configuration = {
+    opensearch = {
+      bucket_arn         = module.s3.server_log_arn
+      buffering_interval = 300
+      domain_arn         = module.opensearch.log_opensearch_arn
+      index_name         = "server-log"
+      s3_backup_mode     = "FailedDocumentsOnly"
+    }
+  }
 }
 
 module "opensearch" {
@@ -197,7 +249,7 @@ module "notification_lambda_log_goup" {
   retention_days = 3
 }
 
-# ElastiCache
+### ElastiCache
 module "elasticache_redis" {
   source = "../../modules/elasticache"
 
