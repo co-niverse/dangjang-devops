@@ -1,9 +1,11 @@
 import fcm
+import base64
+import json
 
 
 def lambda_handler(event, context):
     for record in event["Records"]:
-        payload = record["kinesis"]["data"]
+        payload = json.loads(base64.b64decode(record["kinesis"]["data"]))
 
         token = payload["registration_token"]
         title = payload["title"]
