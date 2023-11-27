@@ -1,17 +1,217 @@
 locals {
-  key_pair_name = "${var.env}-server-key-pair"
+  key_pair_name  = "${var.env}-server-key-pair"
+  all_cidr_block = "0.0.0.0/0"
+  tcp            = "tcp"
+  egress = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = [local.all_cidr_block]
+    }
+  ]
+  create_nat = false
 }
 
+### VPC
 module "vpc" {
   source = "../../modules/vpc"
 
-  availability_zones      = var.availability_zones
-  aws_region              = var.aws_region
-  cidr_numeral            = var.cidr_numeral
-  cidr_numeral_public     = var.cidr_numeral_public
-  cidr_numeral_private    = var.cidr_numeral_private
-  cidr_numeral_private_db = var.cidr_numeral_private_db
-  env                     = var.env
+  vpc_name     = "vpc-${var.env}"
+  igw_name     = "igw-${var.env}"
+  cidr_numeral = var.cidr_numeral
+}
+
+module "public_subnets" {
+  source = "../../modules/vpc/subnet"
+
+  vpc_id           = module.vpc.vpc_id
+  vpc_cidr_numeral = var.cidr_numeral
+  subnets = {
+    for i in range(length(var.availability_zones)) : "public-sb${i}-${var.env}" => {
+      numeral           = var.cidr_numeral_public[i]
+      availability_zone = element(var.availability_zones, i)
+    }
+  }
+  map_public_ip_on_launch = true
+  route_table_name        = "public-rt-${var.env}"
+  enable_igw_destination  = true
+  igw_id                  = module.vpc.igw_id
+}
+
+module "private_app_subnets" {
+  source = "../../modules/vpc/subnet"
+
+  vpc_id           = module.vpc.vpc_id
+  vpc_cidr_numeral = var.cidr_numeral
+  subnets = {
+    for i in range(length(var.availability_zones)) : "private-app-sb${i}-${var.env}" => {
+      numeral           = var.cidr_numeral_private[i]
+      availability_zone = element(var.availability_zones, i)
+    }
+  }
+  route_table_name       = "private-app-rt-${var.env}"
+  enable_nat_destination = local.create_nat
+  nat_gateway_id         = module.nat_gateway.id
+}
+
+module "private_db_subnets" {
+  source = "../../modules/vpc/subnet"
+
+  vpc_id           = module.vpc.vpc_id
+  vpc_cidr_numeral = var.cidr_numeral
+  subnets = {
+    for i in range(length(var.availability_zones)) : "private-db-sb${i}-${var.env}" => {
+      numeral           = var.cidr_numeral_private_db[i]
+      availability_zone = element(var.availability_zones, i)
+    }
+  }
+  route_table_name       = "private-db-rt-${var.env}"
+  enable_nat_destination = local.create_nat
+  nat_gateway_id         = module.nat_gateway.id
+}
+
+module "nat_gateway" {
+  source = "../../modules/vpc/nat_gateway"
+
+  create_nat       = local.create_nat
+  elastic_ip_name  = "nat-gw-eip-${var.env}"
+  subnet_id        = module.public_subnets.ids[0]
+  nat_gateway_name = "nat-gw-${var.env}"
+}
+
+module "security_group_bastion" {
+  source = "../../modules/vpc/security_group"
+
+  name   = "bastion-sg-${var.env}"
+  vpc_id = module.vpc.vpc_id
+  ingress = [
+    {
+      from_port   = 22
+      to_port     = 22
+      protocol    = local.tcp
+      cidr_blocks = [local.all_cidr_block]
+    }
+  ]
+  egress = local.egress
+}
+
+module "security_group_default" {
+  source = "../../modules/vpc/security_group"
+
+  name   = "default-sg-${var.env}"
+  vpc_id = module.vpc.vpc_id
+  ingress = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = local.tcp
+      cidr_blocks = [local.all_cidr_block]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = local.tcp
+      cidr_blocks = [local.all_cidr_block]
+    }
+  ]
+  egress = local.egress
+}
+
+module "security_group_app" {
+  source = "../../modules/vpc/security_group"
+
+  name   = "app-sg-${var.env}"
+  vpc_id = module.vpc.vpc_id
+  ingress = [
+    {
+      from_port       = 8080
+      to_port         = 8080
+      protocol        = local.tcp
+      security_groups = [module.security_group_default.id]
+    },
+    {
+      from_port       = 8081
+      to_port         = 8081
+      protocol        = local.tcp
+      security_groups = [module.security_group_default.id]
+    }
+  ]
+  egress = local.egress
+}
+
+module "security_group_rds" {
+  source = "../../modules/vpc/security_group"
+
+  name   = "rds-sg-${var.env}"
+  vpc_id = module.vpc.vpc_id
+  ingress = [
+    {
+      from_port       = 3306
+      to_port         = 3306
+      protocol        = local.tcp
+      security_groups = [module.security_group_app.id, module.security_group_bastion.id]
+    }
+  ]
+  egress = local.egress
+}
+
+module "security_group_mongo" {
+  source = "../../modules/vpc/security_group"
+
+  name   = "mongo-sg-${var.env}"
+  vpc_id = module.vpc.vpc_id
+  ingress = [
+    {
+      from_port       = 27017
+      to_port         = 27017
+      protocol        = local.tcp
+      security_groups = [module.security_group_app.id]
+    },
+    {
+      from_port       = 22
+      to_port         = 22
+      protocol        = local.tcp
+      security_groups = [module.security_group_bastion.id]
+    }
+  ]
+  egress = local.egress
+}
+
+module "security_group_cache" {
+  source = "../../modules/vpc/security_group"
+
+  name   = "cache-sg-${var.env}"
+  vpc_id = module.vpc.vpc_id
+  ingress = [
+    {
+      from_port       = 6379
+      to_port         = 6379
+      protocol        = local.tcp
+      security_groups = [module.security_group_app.id, module.security_group_bastion.id]
+    }
+  ]
+  egress = local.egress
+}
+
+module "vpc_endpoint_s3" {
+  source = "../../modules/vpc/endpoint"
+
+  create_gateway  = false
+  vpc_id          = module.vpc.vpc_id
+  service_name    = "com.amazonaws.${var.aws_region}.s3"
+  route_table_ids = module.private_app_subnets.ids
+  endpoint_name   = "s3-endpoint-${var.env}"
+}
+
+module "vpc_endpoint_kinesis" {
+  source = "../../modules/vpc/endpoint"
+
+  create_interface = false
+  vpc_id           = module.vpc.vpc_id
+  service_name     = "com.amazonaws.${var.aws_region}.kinesis-streams"
+  subnet_ids       = module.private_app_subnets.ids
+  endpoint_name    = "kinesis-endpoint-${var.env}"
 }
 
 ### S3
@@ -79,8 +279,8 @@ module "ecs" {
   service_name         = "ecs-service-${var.env}"
   launch_type          = "FARGATE"
   desired_count        = var.desired_count
-  subnets              = [for i in range(var.desired_count) : element(module.vpc.private_subnets, i)]
-  security_group       = [module.vpc.app_sg]
+  subnets              = [for i in range(var.desired_count) : element(module.private_app_subnets.ids, i)]
+  security_group       = [module.security_group_app.id]
   elb_target_group_arn = module.elb.target_group_arn
 }
 
@@ -89,8 +289,8 @@ module "elb" {
   source = "../../modules/elb"
 
   elb_name           = "elb-${var.env}"
-  subnets            = module.vpc.public_subnets
-  security_groups    = [module.vpc.default_sg]
+  subnets            = module.public_subnets.ids
+  security_groups    = [module.security_group_default.id]
   target_group_name  = "tg-${var.env}"
   target_port        = 8080
   vpc_id             = module.vpc.vpc_id
@@ -217,8 +417,8 @@ module "mongo-primary" {
 
   instance_type      = var.mongo_instance_type
   key_name           = local.key_pair_name
-  subnet_id          = module.vpc.private_db_subnets[0]
-  security_group_ids = [module.vpc.mongo_sg]
+  subnet_id          = module.private_db_subnets.ids[0]
+  security_group_ids = [module.security_group_mongo.id]
   volume_size        = 20
   ebs_tag_name       = "ebs_mongodb-primary-${var.env}"
   tag_name           = "mongodb-primary-${var.env}"
@@ -230,8 +430,8 @@ module "bastion" {
   instance_type      = var.bastion_instance_type
   key_name           = local.key_pair_name
   pulic_ip_enabled   = true
-  subnet_id          = module.vpc.public_subnets[0]
-  security_group_ids = [module.vpc.bastion_sg]
+  subnet_id          = module.public_subnets.ids[0]
+  security_group_ids = [module.security_group_bastion.id]
   volume_size        = 8
   ebs_tag_name       = "ebs_bastion-${var.env}"
   tag_name           = "bastion-${var.env}"
@@ -248,13 +448,13 @@ module "rds" {
   username              = var.rds_username
   password              = var.rds_password
   db_name               = var.env
-  security_group_ids    = [module.vpc.rds_sg]
+  security_group_ids    = [module.security_group_rds.id]
   create_replica        = false
   replica_instance_name = "rds-replica-${var.env}"
   create_snapshot       = false
   snapshot_name         = "rds-snapshot-${var.env}"
   subnet_group_name     = "rds-sg-${var.env}"
-  subnet_ids            = module.vpc.private_db_subnets
+  subnet_ids            = module.private_db_subnets.ids
   parameter_group_name  = "rds-pg-${var.env}"
 }
 
@@ -290,9 +490,9 @@ module "elasticache_redis" {
   preffered_cluster_azs = [for i in range(var.num_cache_clusters) : element(var.availability_zones, i)]
   node_type             = var.node_type
   num_cache_clusters    = var.num_cache_clusters
-  security_group_ids    = [module.vpc.cache_sg]
+  security_group_ids    = [module.security_group_cache.id]
   subnet_group_name     = "redis-subnet-group-${var.env}"
-  subnet_ids            = module.vpc.private_db_subnets
+  subnet_ids            = module.private_db_subnets.ids
   user_id               = var.user_id
   user_name             = var.user_name
   passwords             = var.passwords
