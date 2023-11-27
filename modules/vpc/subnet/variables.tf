@@ -42,7 +42,7 @@ variable "enable_igw_destination" {
 variable "igw_id" {
   description = "인터넷 게이트웨이 id"
   type        = string
-  default = null
+  default     = null
 }
 
 variable "enable_nat_destination" {
@@ -54,7 +54,7 @@ variable "enable_nat_destination" {
 variable "nat_gateway_id" {
   description = "NAT 게이트웨이 id"
   type        = string
-  default = null
+  default     = null
 }
 
 variable "enable_vpc_endpoint_destination" {
@@ -66,5 +66,5 @@ variable "enable_vpc_endpoint_destination" {
 variable "vpc_endpoint_id" {
   description = "VPC 엔드포인트 id"
   type        = string
-  default = null
+  default     = null
 }

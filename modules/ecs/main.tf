@@ -21,12 +21,12 @@ resource "aws_ecs_cluster" "cluster" {
 
 # ECS Task Definition
 resource "aws_ecs_task_definition" "task" {
-  family                   = var.family
-  network_mode             = var.network_mode
-  cpu                      = var.task_cpu
-  memory                   = var.task_memory
-  task_role_arn            = data.aws_iam_role.ecs_task.arn
-  execution_role_arn       = data.aws_iam_role.ecs_task_execution.arn
+  family             = var.family
+  network_mode       = var.network_mode
+  cpu                = var.task_cpu
+  memory             = var.task_memory
+  task_role_arn      = data.aws_iam_role.ecs_task.arn
+  execution_role_arn = data.aws_iam_role.ecs_task_execution.arn
 
   runtime_platform {
     operating_system_family = var.operating_system_family

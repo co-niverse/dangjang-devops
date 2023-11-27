@@ -13,7 +13,7 @@ variable "env" {
 
 ### VPC
 variable "cidr_numeral" {
-  type    = string
+  type = string
 }
 
 variable "cidr_numeral_public" {
@@ -103,7 +103,7 @@ variable "user_id" {
 variable "user_name" {
   type = string
 }
-  
+
 variable "passwords" {
   type = list(string)
 }
