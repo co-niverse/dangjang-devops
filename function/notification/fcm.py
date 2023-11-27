@@ -9,5 +9,4 @@ def send_message(token, title, body):
         notification=messaging.Notification(title=title, body=body), token=token
     )
 
-    response = messaging.send(message)
-    return response
+    return messaging.send(message)
