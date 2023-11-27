@@ -14,16 +14,17 @@ variable "ingress" {
     from_port       = number
     to_port         = number
     protocol        = string
-    security_groups = list(string)
+    cidr_blocks     = optional(list(string))
+    security_groups = optional(list(string))
   }))
 }
 
 variable "egress" {
   description = "아웃바운드 규칙"
   type = list(object({
-    from_port       = number
-    to_port         = number
-    protocol        = string
+    from_port   = number
+    to_port     = number
+    protocol    = string
     cidr_blocks = list(string)
   }))
 }

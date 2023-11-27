@@ -1,3 +1,3 @@
 output "ids" {
-  value = aws_subnet.subnet.*.id
+  value = [for s in aws_subnet.subnet : s.id]
 }

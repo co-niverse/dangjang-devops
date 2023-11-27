@@ -44,6 +44,6 @@ resource "aws_route" "vpc_endpoint" {
 # Associate route table to subnets
 resource "aws_route_table_association" "route_table_association" {
   for_each       = aws_subnet.subnet
-  subnet_id      = each.key
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.route_table.id
 }
