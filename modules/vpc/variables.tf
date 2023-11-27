@@ -2,30 +2,16 @@
 #       VPC       #
 ###################
 
-variable "availability_zones" {
-  type = list(string)
+variable "vpc_name" {
+  description = "vpc 이름"
+  type        = string
 }
 
-variable "aws_region" {
-  type = string
-}
-
-variable "env" {
-  type = string
+variable "igw_name" {
+  description = "internet gateway 이름"
+  type        = string
 }
 
 variable "cidr_numeral" {
-  type    = string
-}
-
-variable "cidr_numeral_public" {
-  type = map(string)
-}
-
-variable "cidr_numeral_private" {
-  type = map(string)
-}
-
-variable "cidr_numeral_private_db" {
-  type = map(string)
+  type = string
 }
