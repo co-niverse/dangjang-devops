@@ -10,7 +10,6 @@ locals {
       cidr_blocks = [local.all_cidr_block]
     }
   ]
-  create_nat = false
 }
 
 ### VPC
@@ -50,9 +49,9 @@ module "private_app_subnets" {
       availability_zone = element(var.availability_zones, i)
     }
   }
-  route_table_name       = "private-app-rt-${var.env}"
-  enable_nat_destination = local.create_nat
-  nat_gateway_id         = module.nat_gateway.id
+  route_table_name                     = "private-app-rt-${var.env}"
+  enable_network_interface_destination = true
+  network_interface_id                 = module.bastion.network_interface_id
 }
 
 module "private_db_subnets" {
@@ -66,15 +65,15 @@ module "private_db_subnets" {
       availability_zone = element(var.availability_zones, i)
     }
   }
-  route_table_name       = "private-db-rt-${var.env}"
-  enable_nat_destination = local.create_nat
-  nat_gateway_id         = module.nat_gateway.id
+  route_table_name                     = "private-db-rt-${var.env}"
+  enable_network_interface_destination = true
+  network_interface_id                 = module.bastion.network_interface_id
 }
 
 module "nat_gateway" {
   source = "../../modules/vpc/nat_gateway"
 
-  create_nat       = local.create_nat
+  create_nat       = false
   elastic_ip_name  = "nat-gw-eip-${var.env}"
   subnet_id        = module.public_subnets.ids[0]
   nat_gateway_name = "nat-gw-${var.env}"
@@ -91,6 +90,18 @@ module "security_group_bastion" {
       to_port     = 22
       protocol    = local.tcp
       cidr_blocks = [local.all_cidr_block]
+    },
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = local.tcp
+      cidr_blocks = ["10.${var.cidr_numeral}.0.0/16"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = local.tcp
+      cidr_blocks = ["10.${var.cidr_numeral}.0.0/16"]
     }
   ]
   egress = local.egress
@@ -427,12 +438,15 @@ module "mongo-primary" {
 module "bastion" {
   source = "../../modules/ec2"
 
+  ami                = "ami-0c2d3e23e757b5d84" # NAT Instance
   instance_type      = var.bastion_instance_type
   key_name           = local.key_pair_name
   pulic_ip_enabled   = true
   subnet_id          = module.public_subnets.ids[0]
   security_group_ids = [module.security_group_bastion.id]
-  volume_size        = 8
+  source_dest_check  = false
+  device_name        = "/dev/xvda"
+  volume_type        = "standard"
   ebs_tag_name       = "ebs_bastion-${var.env}"
   tag_name           = "bastion-${var.env}"
 }
