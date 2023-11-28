@@ -32,6 +32,18 @@ variable "subnet_ids" {
   default     = []
 }
 
+variable "security_group_ids" {
+  description = "security group ids for interface endpoint"
+  type        = list(string)
+  default     = []
+}
+
+variable "private_dns_enabled" {
+  description = "private dns enabled for interface endpoint"
+  type        = bool
+  default     = true
+}
+
 variable "endpoint_name" {
   description = "endpoint 이름"
   type        = string
