@@ -197,10 +197,10 @@ module "security_group_cache" {
 module "vpc_endpoint_s3" {
   source = "../../modules/vpc/endpoint"
 
-  create_gateway  = false
+  create_gateway  = true
   vpc_id          = module.vpc.vpc_id
   service_name    = "com.amazonaws.${var.aws_region}.s3"
-  route_table_ids = module.private_app_subnets.ids
+  route_table_ids = [module.private_app_subnets.route_table_id]
   endpoint_name   = "s3-endpoint-${var.env}"
 }
 
