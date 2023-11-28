@@ -23,20 +23,20 @@ variable "map_public_ip_on_launch" {
 }
 
 variable "route_table_name" {
-  description = "라우트 테이블 이름"
+  description = "라우팅 테이블 이름"
   type        = string
-}
-
-variable "destination_cidr_block" {
-  description = "라우트 대상 CIDR 블록"
-  type        = string
-  default     = "0.0.0.0/0"
 }
 
 variable "enable_igw_destination" {
   description = "인터넷 게이트웨이 목적지 연결 여부"
   type        = bool
   default     = false
+}
+
+variable "destination_cidr_block_igw" {
+  description = "라우트 대상 CIDR 블록 - 인터넷 게이트웨이"
+  type        = string
+  default     = "0.0.0.0/0"
 }
 
 variable "igw_id" {
@@ -51,6 +51,12 @@ variable "enable_nat_destination" {
   default     = false
 }
 
+variable "destination_cidr_block_nat" {
+  description = "라우트 대상 CIDR 블록 - NAT 게이트웨이"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
 variable "nat_gateway_id" {
   description = "NAT 게이트웨이 id"
   type        = string
@@ -63,8 +69,32 @@ variable "enable_vpc_endpoint_destination" {
   default     = false
 }
 
+variable "destination_cidr_block_vpc_endpoint" {
+  description = "라우트 대상 CIDR 블록 - VPC 엔드포인트"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
 variable "vpc_endpoint_id" {
   description = "VPC 엔드포인트 id"
+  type        = string
+  default     = null
+}
+
+variable "enable_network_interface_destination" {
+  description = "네트워크 인터페이스 목적지 연결 여부"
+  type        = bool
+  default     = false
+}
+
+variable "destination_cidr_block_network_interface" {
+  description = "라우트 대상 CIDR 블록 - 네트워크 인터페이스"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
+variable "network_interface_id" {
+  description = "네트워크 인터페이스 id"
   type        = string
   default     = null
 }

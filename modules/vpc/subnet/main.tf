@@ -23,22 +23,29 @@ resource "aws_route_table" "route_table" {
 resource "aws_route" "internet_gateway" {
   count                  = var.enable_igw_destination ? 1 : 0
   route_table_id         = aws_route_table.route_table.id
-  destination_cidr_block = var.destination_cidr_block
+  destination_cidr_block = var.destination_cidr_block_igw
   gateway_id             = var.igw_id
 }
 
 resource "aws_route" "nat_gateway" {
   count                  = var.enable_nat_destination ? 1 : 0
   route_table_id         = aws_route_table.route_table.id
-  destination_cidr_block = var.destination_cidr_block
+  destination_cidr_block = var.destination_cidr_block_nat
   nat_gateway_id         = var.nat_gateway_id
 }
 
 resource "aws_route" "vpc_endpoint" {
   count                  = var.enable_vpc_endpoint_destination ? 1 : 0
   route_table_id         = aws_route_table.route_table.id
-  destination_cidr_block = var.destination_cidr_block
+  destination_cidr_block = var.destination_cidr_block_vpc_endpoint
   vpc_endpoint_id        = var.vpc_endpoint_id
+}
+
+resource "aws_route" "network_interface" {
+  count                  = var.enable_network_interface_destination ? 1 : 0
+  route_table_id         = aws_route_table.route_table.id
+  destination_cidr_block = var.destination_cidr_block_network_interface
+  network_interface_id   = var.network_interface_id
 }
 
 # Associate route table to subnets
