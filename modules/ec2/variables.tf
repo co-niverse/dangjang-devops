@@ -34,6 +34,12 @@ variable "security_group_ids" {
   type        = list(string)
 }
 
+variable "source_dest_check" {
+  description = "소스/대상 확인 여부"
+  type        = bool
+  default     = true
+}
+
 variable "device_name" {
   description = "마운트할 디바이스 이름"
   type        = string
@@ -49,6 +55,7 @@ variable "volume_type" {
 variable "volume_size" {
   description = "EBS 볼륨 크기"
   type        = number
+  default     = 8
 }
 
 variable "ebs_tag_name" {

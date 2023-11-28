@@ -10,6 +10,7 @@ resource "aws_instance" "instance" {
 
   subnet_id              = var.subnet_id
   vpc_security_group_ids = var.security_group_ids
+  source_dest_check = var.source_dest_check
 
   ebs_block_device {
     device_name = var.device_name
