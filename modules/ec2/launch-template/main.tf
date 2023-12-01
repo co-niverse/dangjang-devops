@@ -1,10 +1,3 @@
-data "template_file" "user_data" {
-  template = file("${path.module}/user_data.sh")
-  vars = {
-    ecs_cluster_name = var.ecs_cluster_name
-  }
-}
-
 data "aws_iam_role" "ec2_role" {
   name = var.ec2_role_name
 }
@@ -20,7 +13,9 @@ resource "aws_launch_template" "template" {
   instance_type          = var.instance_type
   key_name               = var.key_name
   vpc_security_group_ids = var.vpc_security_group_ids
-  user_data              = base64encode(data.template_file.user_data.rendered)
+  user_data              = templatefile("${path.module}/user_data.sh", {
+    ecs_cluster_name = var.ecs_cluster_name
+  })
 
   block_device_mappings {
     device_name = var.device_name
