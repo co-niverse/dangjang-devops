@@ -1,3 +1,17 @@
+locals {
+  default_metrics = [
+    "GroupMinSize",
+    "GroupMaxSize",
+    "GroupDesiredCapacity",
+    "GroupInServiceInstances",
+    "GroupPendingInstances",
+    "GroupStandbyInstances",
+    "GroupTerminatingInstances",
+    "GroupTotalInstances"
+  ]
+  enabled_metrics = var.metrics != null ? toset(concat(local.default_metrics, var.metrics)) : local.default_metrics
+}
+
 resource "aws_autoscaling_group" "asg" {
   name                      = var.name
   desired_capacity          = var.desired_capacity
@@ -7,6 +21,8 @@ resource "aws_autoscaling_group" "asg" {
   health_check_grace_period = var.health_check_grace_period
   health_check_type         = var.health_check_type
   protect_from_scale_in     = var.protect_from_scale_in
+  metrics_granularity       = var.metrics_granularity
+  enabled_metrics           = local.enabled_metrics
 
   launch_template {
     id      = var.launch_template_id

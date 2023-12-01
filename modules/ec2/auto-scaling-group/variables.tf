@@ -41,6 +41,18 @@ variable "protect_from_scale_in" {
   default     = true
 }
 
+variable "metrics_granularity" {
+  description = "metrics 수집 주기 - hasicorp/aws/v5.29.0 기준 1Minute만 지원"
+  type        = string
+  default     = "1Minute"
+}
+
+variable "metrics" {
+  description = "수집할 metrics"
+  type        = list(string)
+  default     = null
+}
+
 variable "launch_template_id" {
   description = "launch template id"
   type        = string
@@ -53,7 +65,7 @@ variable "launch_template_version" {
 }
 
 variable "instance_refresh_strategy" {
-  description = "instance 교체 시 배포 전략 - 현재 Rolling만 지원"
+  description = "instance 교체 시 배포 전략 - hasicorp/aws/v5.29.0 기준 Rolling만 지원"
   type        = string
   default     = "Rolling"
 }
