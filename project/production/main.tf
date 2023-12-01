@@ -1,5 +1,4 @@
 locals {
-  key_pair_name  = "${var.env}-server-key-pair"
   all_cidr_block = "0.0.0.0/0"
   tcp            = "tcp"
   egress = [
@@ -266,6 +265,7 @@ module "ecs" {
 
   # task
   family                    = "ecs-template-app-${var.env}"
+  requires_compatibilities = ["FARGATE"]
   task_cpu                  = 4096
   task_memory               = 8192
   app_container_name        = "app-container-${var.env}"
@@ -427,7 +427,7 @@ module "mongo-primary" {
   source = "../../modules/ec2"
 
   instance_type      = var.mongo_instance_type
-  key_name           = local.key_pair_name
+  key_name           = module.key_pair.name
   subnet_id          = module.private_db_subnets.ids[0]
   security_group_ids = [module.security_group_mongo.id]
   volume_size        = 20
@@ -440,7 +440,7 @@ module "bastion" {
 
   ami                = "ami-0c2d3e23e757b5d84" # NAT Instance
   instance_type      = var.bastion_instance_type
-  key_name           = local.key_pair_name
+  key_name           = module.key_pair.name
   pulic_ip_enabled   = true
   subnet_id          = module.public_subnets.ids[0]
   security_group_ids = [module.security_group_bastion.id]
@@ -449,6 +449,13 @@ module "bastion" {
   volume_type        = "standard"
   ebs_tag_name       = "ebs_bastion-${var.env}"
   tag_name           = "bastion-${var.env}"
+}
+
+module "key_pair" {
+  source = "../../modules/ec2/key-pair"
+
+  key_name        = "${var.env}-server-key-pair"
+  public_key_path = "../../public-key-pair/${var.env}.txt"
 }
 
 ### RDS
