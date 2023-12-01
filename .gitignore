@@ -10,3 +10,4 @@ function/*.zip
 .DS_Store
 **/layer/**/python
 **/docker-staging.sh
+**/public-key-pair/*.txt
