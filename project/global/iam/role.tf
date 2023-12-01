@@ -59,3 +59,15 @@ module "firehose_role" {
     module.opensearch_policy.arn
   ]
 }
+
+module "ecs_ec2_role" {
+  source    = "../../../modules/iam-role"
+  role_name = "ecs-ec2-role"
+  services = [
+    "ec2.amazonaws.com",
+    "ecs.amazonaws.com"
+  ]
+  role_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+  ]
+}
