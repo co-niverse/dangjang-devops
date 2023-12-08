@@ -7,51 +7,73 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "cas_name" {
-  description = "capacity provider 이름 (Cluster Auto Scaling)"
-  type        = string
+variable "cas" {
+  description = "capacity provider 설정"
+  type = map(object({
+    auto_scaling_group_arn         = string # ASG의 arn
+    managed_termination_protection = string # scale in 이벤트 때 task가 실행 중인 instance는 종료되지 않도록 보호 (ENABLED, DISABLED)
+    maximum_scaling_step_size      = number # cas가 scale in/out 할 때 최대로 조정할 수 있는 instance 개수 (1 ~ 10,000)
+    minimum_scaling_step_size      = number # cas가 scale in/out 할 때 최소로 조정할 수 있는 instance 개수 (1 ~ 10,000)
+    status                         = string # ECS가 ASG의 scale in/out 관리 (ENABLED, DISABLED)
+    target_capacity                = number # Capacity Provider Reservation 매트릭 목표 수치 (1 ~ 100)
+    instance_warmup_period         = optional(number) # 새로운 instance가 시작됐을 때 CloudWatch 매트릭에 반영되기까지의 시간 (sec)
+  }))
+  default = null
 }
 
-variable "auto_scaling_group_arn" {
-  description = "ASG의 arn"
-  type        = string
+variable "enabled_fargate_cas" {
+  description = "FARGATE, FARGATE_SPOT capacity provider 활성화 여부"
+  type        = bool
+  default     = false
 }
 
-variable "managed_termination_protection" {
-  description = "scale in 이벤트 때 task가 실행 중인 instance는 종료되지 않도록 보호"
-  type        = string
-  default     = "ENABLED"
-}
+# variable "cas_name" {
+#   description = "capacity provider 이름 (Cluster Auto Scaling)"
+#   type        = string
+#   default     = null
+# }
 
-variable "maximum_scaling_step_size" {
-  description = "cas가 scale in/out 할 때 최대로 조정할 수 있는 instance 개수 (1 ~ 10,000)"
-  type        = number
-  default     = 1
-}
+# variable "auto_scaling_group_arn" {
+#   description = "ASG의 arn"
+#   type        = string
+#   default     = null
+# }
 
-variable "minimum_scaling_step_size" {
-  description = "cas가 scale in/out 할 때 최소로 조정할 수 있는 instance 개수 (1 ~ 10,000)"
-  type        = number
-  default     = 1
-}
+# variable "managed_termination_protection" {
+#   description = "scale in 이벤트 때 task가 실행 중인 instance는 종료되지 않도록 보호"
+#   type        = string
+#   default     = "ENABLED"
+# }
 
-variable "status" {
-  description = "ECS가 ASG의 scale in/out 관리"
-  type        = string
-  default     = "ENABLED"
-}
+# variable "maximum_scaling_step_size" {
+#   description = "cas가 scale in/out 할 때 최대로 조정할 수 있는 instance 개수 (1 ~ 10,000)"
+#   type        = number
+#   default     = 1
+# }
 
-variable "target_capacity" {
-  description = "Capacity Provider Reservation 매트릭 목표 수치 (1 ~ 100)"
-  type        = number
-  default     = 100
-}
+# variable "minimum_scaling_step_size" {
+#   description = "cas가 scale in/out 할 때 최소로 조정할 수 있는 instance 개수 (1 ~ 10,000)"
+#   type        = number
+#   default     = 1
+# }
 
-variable "instance_warmup_period" {
-  description = "새로운 instance가 시작됐을 때 CloudWatch 매트릭에 반영되기까지의 시간 (sec)"
-  type        = number
-  default     = 300
-}
+# variable "status" {
+#   description = "ECS가 ASG의 scale in/out 관리"
+#   type        = string
+#   default     = "ENABLED"
+# }
+
+# variable "target_capacity" {
+#   description = "Capacity Provider Reservation 매트릭 목표 수치 (1 ~ 100)"
+#   type        = number
+#   default     = 100
+# }
+
+# variable "instance_warmup_period" {
+#   description = "새로운 instance가 시작됐을 때 CloudWatch 매트릭에 반영되기까지의 시간 (sec)"
+#   type        = number
+#   default     = 300
+# }
 
 # variable "family" {
 #   description = "task 정의 이름"

@@ -2,6 +2,10 @@
 #       ECS       #
 ###################
 
+locals {
+  default_capacity_providers = var.enabled_fargate_cas ? ["FARGATE", "FARGATE_SPOT"] : []
+}
+
 # ECS Cluster
 resource "aws_ecs_cluster" "cluster" {
   name = var.cluster_name
@@ -10,30 +14,47 @@ resource "aws_ecs_cluster" "cluster" {
   }
 }
 
+# Cluster Auto Scaling
 resource "aws_ecs_capacity_provider" "cas" {
-  name = var.cas_name
+  for_each = var.cas
+  name = each.key
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn         = var.auto_scaling_group_arn
-    managed_termination_protection = var.managed_termination_protection
+    auto_scaling_group_arn         = each.value.auto_scaling_group_arn
+    managed_termination_protection = each.value.managed_termination_protection
 
     managed_scaling {
-      maximum_scaling_step_size = var.maximum_scaling_step_size
-      minimum_scaling_step_size = var.minimum_scaling_step_size
-      status                    = var.status
-      target_capacity           = var.target_capacity
-      instance_warmup_period    = var.instance_warmup_period
+      maximum_scaling_step_size = each.value.maximum_scaling_step_size
+      minimum_scaling_step_size = each.value.minimum_scaling_step_size
+      status                    = each.value.status
+      target_capacity           = each.value.target_capacity
+      instance_warmup_period    = each.value.instance_warmup_period
     }
   }
+  # name = var.cas_name
+
+  # auto_scaling_group_provider {
+  #   auto_scaling_group_arn         = var.auto_scaling_group_arn
+  #   managed_termination_protection = var.managed_termination_protection
+
+  #   managed_scaling {
+  #     maximum_scaling_step_size = var.maximum_scaling_step_size
+  #     minimum_scaling_step_size = var.minimum_scaling_step_size
+  #     status                    = var.status
+  #     target_capacity           = var.target_capacity
+  #     instance_warmup_period    = var.instance_warmup_period
+  #   }
+  # }
 
   tags = {
-    Name = var.cas_name
+    Name = each.key
   }
 }
 
+# ECS Cluster Capacity Providers
 resource "aws_ecs_cluster_capacity_providers" "cas" {
   cluster_name       = aws_ecs_cluster.cluster.name
-  capacity_providers = [aws_ecs_capacity_provider.cas.name]
+  capacity_providers = var.cas != null ? concat(local.default_capacity_providers, [for cp in aws_ecs_capacity_provider.cas : cp.name]) : local.default_capacity_providers
 }
 
 # # ECS Task Definition
