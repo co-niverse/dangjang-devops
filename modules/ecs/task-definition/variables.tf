@@ -73,8 +73,8 @@ variable "container_memory" {
 variable "port_mappings" {
   description = "컨테이너 포트 매핑"
   type = list(object({
-    host_port      = number
-    container_port = number
+    hostPort      = number
+    containerPort = number
   }))
 }
 
