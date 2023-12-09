@@ -35,11 +35,22 @@ resource "aws_autoscaling_group" "asg" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes = [ desired_capacity ]
   }
 
   tag {
     key                 = "Name"
-    value               = var.name
+    value               = var.instance_name
     propagate_at_launch = var.propagate_at_launch
+  }
+
+  dynamic "tag" {
+    for_each = var.ecs_managed ? [1] : []
+    content {
+      key                 = "AmazonECSManaged"
+      value               = true
+      propagate_at_launch = true
+    }
+    
   }
 }

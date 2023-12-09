@@ -38,7 +38,7 @@ variable "health_check_type" {
 variable "protect_from_scale_in" {
   description = "새로 시작된 instance가 scale in 대상에서 보호되는지 여부"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "metrics_granularity" {
@@ -70,8 +70,18 @@ variable "instance_refresh_strategy" {
   default     = "Rolling"
 }
 
+variable "instance_name" {
+  description = "EC2 인스턴스명"
+  type        = string
+}
+
 variable "propagate_at_launch" {
   description = "instance 생성 시 tag 전파 여부"
   type        = bool
   default     = true
+}
+
+variable "ecs_managed" {
+  description = "ECS cas를 auto scaling group에 연결했을 경우 true"
+  type        = bool
 }
