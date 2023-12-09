@@ -28,6 +28,7 @@ resource "aws_ecs_task_definition" "task" {
       cpu              = var.container_cpu
       memory           = var.container_memory
       portMappings     = var.port_mappings
+      environment      = var.environment
       logConfiguration = var.log_configuration
     }
   ])

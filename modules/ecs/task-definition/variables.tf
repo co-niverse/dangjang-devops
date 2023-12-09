@@ -11,7 +11,6 @@ variable "requires_compatibilities" {
 variable "network_mode" {
   description = "docker 네트워킹 모드 (awsvpc, bridge, host, none) - FARGATE : awsvpc, LINUX Instance : all, WINDOWS Instance : NAT(default), awsvpc"
   type        = string
-  default     = "awsvpc"
 }
 
 variable "task_cpu" {
@@ -39,7 +38,7 @@ variable "cpu_architecture" {
 }
 
 variable "container_name" {
-  description = "컨테이너 이름 (로드밸런서 연결)"
+  description = "컨테이너 이름"
   type        = string
 }
 
@@ -76,6 +75,15 @@ variable "port_mappings" {
     hostPort      = number
     containerPort = number
   }))
+}
+
+variable "environment" {
+  description = "컨테이너 환경변수"
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = null
 }
 
 variable "log_configuration" {
