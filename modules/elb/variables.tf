@@ -37,7 +37,7 @@ variable "target_group_name" {
 variable "target_type" {
   description = "타겟 그룹의 유형 (instance, ip, lambda, alb)"
   type        = string
-  default     = "ip"
+  default     = "instance"
 }
 
   
