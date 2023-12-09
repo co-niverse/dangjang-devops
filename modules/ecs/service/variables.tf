@@ -20,7 +20,7 @@ variable "enable_execute_command" {
 }
 
 variable "launch_type" {
-  description = "service 실행 유형 (FARGATE, EC2) - task 실행 유형과 동일"
+  description = "service 실행 유형 (FARGATE, EC2) - task 실행 유형과 동일 (capacity provider strategy 사용 시 conflict 발생하므로 null로 설정)"
   type        = string
   default     = null
 }
@@ -43,10 +43,10 @@ variable "health_check_grace_period_seconds" {
   default     = null
 }
 
-variable "iam_role_arn" {
-  description = "서비스에서 로드 밸런서를 사용할 때 필요한 IAM 역할 - network_mode가 awsvpc인 경우 필요없음"
-  type        = string
-  default     = null
+variable "requires_iam_role" {
+  description = "서비스에서 로드 밸런서를 사용할 때 필요한 IAM 역할 사용 여부 - network_mode가 awsvpc인 경우 필요없음"
+  type        = bool
+  default     = false
 }
 
 variable "network_configuration" {

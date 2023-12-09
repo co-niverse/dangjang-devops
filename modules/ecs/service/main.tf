@@ -1,3 +1,7 @@
+data "aws_iam_role" "ecs_service_role" {
+  name = "AWSServiceRoleForECS"
+}
+
 resource "aws_ecs_service" "service" {
   name                              = var.service_name
   cluster                           = var.cluster_name
@@ -7,7 +11,7 @@ resource "aws_ecs_service" "service" {
   desired_count                     = var.desired_count
   scheduling_strategy               = var.scheduling_strategy
   health_check_grace_period_seconds = var.health_check_grace_period_seconds
-  iam_role                          = var.iam_role_arn
+  iam_role                          = var.requires_iam_role ? data.aws_iam_role.ecs_service_role.arn : null
 
   dynamic "network_configuration" {
     for_each = var.network_configuration != null ? [1] : []
