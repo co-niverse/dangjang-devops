@@ -17,11 +17,6 @@ resource "aws_ecs_service" "service" {
     }
   }
 
-  # network_configuration {
-  #   subnets         = var.subnets
-  #   security_groups = var.security_group
-  # }
-
   dynamic "load_balancer" {
     for_each = var.load_balancer != null ? [1] : []
     content {
@@ -31,11 +26,6 @@ resource "aws_ecs_service" "service" {
     }
 
   }
-  # load_balancer {
-  #   target_group_arn = var.elb_target_group_arn
-  #   container_name   = var.container_name
-  #   container_port   = var.container_port
-  # }
 
   dynamic "capacity_provider_strategy" {
     for_each = var.capacity_provider_strategy != null ? var.capacity_provider_strategy : []

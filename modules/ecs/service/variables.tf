@@ -22,6 +22,7 @@ variable "enable_execute_command" {
 variable "launch_type" {
   description = "service 실행 유형 (FARGATE, EC2) - task 실행 유형과 동일"
   type        = string
+  default     = null
 }
 
 variable "desired_count" {
@@ -51,21 +52,11 @@ variable "iam_role_arn" {
 variable "network_configuration" {
   description = "네트워크 설정 - network_mode가 awsvpc인 경우 필수, 나머지는 지원하지 않음"
   type = object({
-    subnets         = optional(list(string)) # subnet ids
+    subnets         = list(string) # subnet ids
     security_groups = optional(list(string)) # security group ids
   })
   default = null
 }
-
-# variable "subnets" {
-#   description = "task 또는 service와 연결할 서브넷"
-#   type        = list(string)
-# }
-
-# variable "security_group" {
-#   description = "task 또는 service와 연결할 보안그룹"
-#   type        = list(string)
-# }
 
 variable "load_balancer" {
   description = "로드밸런서 연결"
