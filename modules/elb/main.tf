@@ -36,10 +36,6 @@ resource "aws_alb_target_group" "default" {
     unhealthy_threshold = var.unhealthy_threshold
   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
-
   tags = {
     Name = var.target_group_name
   }
