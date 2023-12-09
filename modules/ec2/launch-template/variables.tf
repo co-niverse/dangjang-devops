@@ -41,7 +41,7 @@ variable "vpc_security_group_ids" {
 variable "device_name" {
   description = "마운트할 디바이스 이름"
   type        = string
-  default     = "/dev/sda1"
+  default     = "/dev/xvda"
 }
 
 variable "volume_type" {
@@ -53,7 +53,7 @@ variable "volume_type" {
 variable "volume_size" {
   description = "EBS 볼륨 크기"
   type        = number
-  default     = 8
+  default     = 30
 }
 
 variable "enabled_monitoring" {

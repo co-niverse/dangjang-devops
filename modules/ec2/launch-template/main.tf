@@ -13,9 +13,11 @@ resource "aws_launch_template" "template" {
   instance_type          = var.instance_type
   key_name               = var.key_name
   vpc_security_group_ids = var.vpc_security_group_ids
-  user_data              = templatefile("${path.module}/user_data.sh", {
-    ecs_cluster_name = var.ecs_cluster_name
-  })
+  user_data = base64encode(
+    templatefile("${path.module}/user_data.sh", {
+      ecs_cluster_name = var.ecs_cluster_name
+    })
+  )
 
   block_device_mappings {
     device_name = var.device_name
