@@ -21,11 +21,12 @@ resource "aws_lb" "default" {
 
 # ELB target group
 resource "aws_alb_target_group" "default" {
-  name        = var.target_group_name
-  target_type = var.target_type
-  port        = var.target_port
-  protocol    = var.target_protocol
-  vpc_id      = var.vpc_id
+  name                 = var.target_group_name
+  target_type          = var.target_type
+  port                 = var.target_port
+  protocol             = var.target_protocol
+  vpc_id               = var.vpc_id
+  deregistration_delay = var.deregistration_delay
 
   health_check { # 상태 확인
     port                = var.health_check_port
@@ -42,7 +43,7 @@ resource "aws_alb_target_group" "default" {
 }
 
 # 활성화된 도메인 인증서 가져오기
-data "aws_acm_certificate" "acm" { 
+data "aws_acm_certificate" "acm" {
   domain   = var.certificate_domain
   statuses = ["ISSUED"]
 }

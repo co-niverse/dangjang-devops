@@ -40,7 +40,6 @@ variable "target_type" {
   default     = "instance"
 }
 
-  
 variable "target_port" {
   description = "타겟 그룹이 수신하는 포트"
   type        = number
@@ -55,6 +54,12 @@ variable "target_protocol" {
 variable "vpc_id" {
   description = "타겟 그룹을 생성할 VPC ID (required when target_type is instance, ip, alb)"
   type = string
+}
+
+variable "deregistration_delay" {
+  description = "타겟 그룹에서 타겟이 제거되기 전 대기 시간(sec)"
+  type        = number
+  default     = 300
 }
 
 variable "health_check_port" {
