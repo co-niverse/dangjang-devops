@@ -7,6 +7,12 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "namespace_arn" {
+  description = "service discovery namespace arn"
+  type        = string
+  default     = null
+}
+
 variable "cas" {
   description = "capacity provider 설정"
   type = map(object({

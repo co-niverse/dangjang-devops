@@ -9,6 +9,14 @@ locals {
 # ECS Cluster
 resource "aws_ecs_cluster" "cluster" {
   name = var.cluster_name
+
+  dynamic "service_connect_defaults" {
+    for_each = var.namespace_arn != null ? [1] : []
+    content {
+      namespace = var.namespace_arn
+    }
+  }
+
   tags = {
     Name = var.cluster_name
   }
