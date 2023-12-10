@@ -36,6 +36,7 @@ variable "key_name" {
 variable "vpc_security_group_ids" {
   description = "할당할 Security Group ID"
   type        = list(string)
+  default     = null
 }
 
 variable "device_name" {
