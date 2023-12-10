@@ -72,8 +72,10 @@ variable "container_memory" {
 variable "port_mappings" {
   description = "컨테이너 포트 매핑"
   type = list(object({
-    hostPort      = number
     containerPort = number
+    hostPort      = optional(number) # FARAGATE or awsvpc 네트워크일 경우 비워두거나 containerPort와 동일한 값
+    name          = optional(string) # Service Connect 구성에 사용하는 포트 별칭
+    appProtocol   = optional(string) # Service Connect 구성에 사용하는 프로토콜 (default: tcp, available: http, http2, grpc)
   }))
 }
 
