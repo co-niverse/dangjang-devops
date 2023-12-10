@@ -48,6 +48,33 @@ resource "aws_ecs_service" "service" {
     }
   }
 
+  dynamic "service_connect_configuration" {
+    for_each = var.service_connect_configuration != null ? [1] : []
+    content {
+      enabled   = true
+      namespace = var.service_connect_configuration.namespace
+
+      dynamic "service" {
+        for_each = var.service_connect_configuration.service != null ? [1] : []
+        content {
+          port_name      = var.service_connect_configuration.service.port_name
+          discovery_name = var.service_connect_configuration.service.discovery_name
+          client_alias {
+            port     = var.service_connect_configuration.service.client_alias.port
+            dns_name = var.service_connect_configuration.service.client_alias.dns_name
+          }
+        }
+      }
+      dynamic "log_configuration" {
+        for_each = var.service_connect_configuration.log_configuration != null ? [1] : []
+        content {
+          log_driver = var.service_connect_configuration.log_configuration.log_driver
+          options    = var.service_connect_configuration.log_configuration.options
+        }
+      }
+    }
+  }
+
   lifecycle {
     ignore_changes = [desired_count]
   }
