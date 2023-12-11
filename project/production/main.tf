@@ -147,12 +147,6 @@ module "security_group_app" {
       to_port         = var.app_container_health_check_port
       protocol        = local.tcp
       security_groups = [module.security_group_default.id]
-    },
-    {
-      from_port       = 22
-      to_port         = 22
-      protocol        = local.tcp
-      security_groups = [module.security_group_bastion.id]
     }
   ]
   egress = local.egress
@@ -201,12 +195,6 @@ module "security_group_mongo" {
       to_port         = 27017
       protocol        = local.tcp
       security_groups = [module.security_group_app.id]
-    },
-    {
-      from_port       = 22
-      to_port         = 22
-      protocol        = local.tcp
-      security_groups = [module.security_group_bastion.id]
     }
   ]
   egress = local.egress
@@ -223,6 +211,22 @@ module "security_group_cache" {
       to_port         = 6379
       protocol        = local.tcp
       security_groups = [module.security_group_app.id, module.security_group_bastion.id]
+    }
+  ]
+  egress = local.egress
+}
+
+module "security_group_ssh_bastion" {
+  source = "../../modules/vpc/security_group"
+
+  name   = "ssh-sg-${var.env}"
+  vpc_id = module.vpc.vpc_id
+  ingress = [
+    {
+      from_port       = 22
+      to_port         = 22
+      protocol        = local.tcp
+      security_groups = [module.security_group_bastion.id]
     }
   ]
   egress = local.egress
@@ -551,7 +555,7 @@ module "mongo-primary" {
   instance_type      = var.mongo_instance_type
   key_name           = module.key_pair.name
   subnet_id          = module.private_db_subnets.ids[0]
-  security_group_ids = [module.security_group_mongo.id]
+  security_group_ids = [module.security_group_mongo.id, module.security_group_ssh_bastion.id]
   volume_size        = 20
   ebs_tag_name       = "ebs_mongodb-primary-${var.env}"
   tag_name           = "mongodb-primary-${var.env}"
@@ -652,6 +656,7 @@ module "launch_template" {
   image_id         = "ami-0c1ffd9e3d9b0f4af" # ecs optimized AMI arm64
   instance_type    = var.launch_template_instance_type
   key_name         = module.key_pair.name
+  vpc_security_group_ids = [module.security_group_ssh_bastion.id]
   ebs_tag_name     = "ebs-ecs-instance-${var.env}"
 }
 
