@@ -69,6 +69,12 @@ variable "auto_minor_version_upgrade" {
   default     = false
 }
 
+variable "apply_immediately" {
+  description = "변경 사항 즉시 적용 여부"
+  type        = bool
+  default     = false
+}
+
 variable "subnet_group_name" {
   description = "서브넷 그룹 이름"
   type        = string
