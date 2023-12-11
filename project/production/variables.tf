@@ -42,6 +42,26 @@ variable "desired_count" {
   type = number
 }
 
+variable "app_container_port" {
+  type = number
+}
+
+variable "app_container_health_check_port" {
+  type = number
+}
+
+variable "app_container_name" {
+  type = string
+}
+
+variable "fluentbit_container_port" {
+  type = number
+}
+
+variable "fluentbit_container_name" {
+  type = string
+}
+
 ### ELB
 variable "acm_domain" {
   type = string
@@ -106,4 +126,9 @@ variable "user_name" {
 
 variable "passwords" {
   type = list(string)
+}
+
+### Launch Template
+variable "launch_template_instance_type" {
+  type = string
 }

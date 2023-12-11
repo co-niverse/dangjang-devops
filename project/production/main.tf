@@ -9,6 +9,8 @@ locals {
       cidr_blocks = [local.all_cidr_block]
     }
   ]
+  default_cas_name = "cas-default"
+  spot_cas_name    = "cas-spot"
 }
 
 ### VPC
@@ -135,16 +137,38 @@ module "security_group_app" {
   vpc_id = module.vpc.vpc_id
   ingress = [
     {
-      from_port       = 8080
-      to_port         = 8080
+      from_port       = var.app_container_port
+      to_port         = var.app_container_port
       protocol        = local.tcp
       security_groups = [module.security_group_default.id]
     },
     {
-      from_port       = 8081
-      to_port         = 8081
+      from_port       = var.app_container_health_check_port
+      to_port         = var.app_container_health_check_port
       protocol        = local.tcp
       security_groups = [module.security_group_default.id]
+    },
+    {
+      from_port       = 22
+      to_port         = 22
+      protocol        = local.tcp
+      security_groups = [module.security_group_bastion.id]
+    }
+  ]
+  egress = local.egress
+}
+
+module "security_group_fluentbit" {
+  source = "../../modules/vpc/security_group"
+
+  name   = "fluentbit-sg-${var.env}"
+  vpc_id = module.vpc.vpc_id
+  ingress = [
+    {
+      from_port       = 8888
+      to_port         = 8888
+      protocol        = local.tcp
+      security_groups = [module.security_group_app.id]
     }
   ]
   egress = local.egress
@@ -257,57 +281,155 @@ module "ecr_fluentbit" {
 }
 
 ### ECS
-module "ecs" {
+module "ecs_cluster" {
   source = "../../modules/ecs"
 
-  # cluster
-  cluster_name = "ecs-cluster-${var.env}"
+  cluster_name  = "ecs-cluster-${var.env}"
+  namespace_arn = module.cluster_namespace.arn
+  cas = { (local.default_cas_name) = {
+    auto_scaling_group_arn         = module.asg_default.arn
+    managed_termination_protection = "DISABLED"
+    status                         = "ENABLED"
+    }
+  }
+}
 
-  # task
-  family                    = "ecs-template-app-${var.env}"
-  requires_compatibilities = ["FARGATE"]
-  task_cpu                  = 4096
-  task_memory               = 8192
-  app_container_name        = "app-container-${var.env}"
-  app_repository_url        = module.ecr_app.repository_url
-  app_cpu                   = 2048
-  app_memory                = 4096
-  app_container_port        = 8080
-  app_container_health_port = 8081
-  fluentbit_container_name  = "fluentbit-container-${var.env}"
-  fluentbit_repository_url  = module.ecr_fluentbit.repository_url
-  fluentbit_cpu             = 512
-  fluentbit_memory          = 512
-  fluentbit_port            = 8888
-  fluentbit_environment = [
+module "cluster_namespace" {
+  source = "../../modules/cloudmap"
+
+  name = "dangjang-ecs-cluster-${var.env}"
+}
+
+module "task_definition_app" {
+  source = "../../modules/ecs/task-definition"
+
+  family                   = "ecs-template-app-${var.env}"
+  task_cpu                 = 1536
+  task_memory              = 1536
+  requires_compatibilities = ["EC2"]
+  network_mode             = "awsvpc"
+  container_name           = var.app_container_name
+  repository_url           = module.ecr_app.repository_url
+  container_cpu            = 1024
+  container_memory         = 1024
+  port_mappings = [
     {
-      name  = "env"
-      value = "${var.env}"
+      hostPort      = var.app_container_port
+      containerPort = var.app_container_port
+    },
+    {
+      hostPort      = var.app_container_health_check_port
+      containerPort = var.app_container_health_check_port
     }
   ]
+}
 
-  # service
-  service_name         = "ecs-service-${var.env}"
-  launch_type          = "FARGATE"
-  desired_count        = var.desired_count
-  subnets              = [for i in range(var.desired_count) : element(module.private_app_subnets.ids, i)]
-  security_group       = [module.security_group_app.id]
-  elb_target_group_arn = module.elb.target_group_arn
+module "ecs_service_app_default" {
+  source = "../../modules/ecs/service"
+
+  service_name                      = "ecs-service-app-default-${var.env}"
+  cluster_name                      = module.ecs_cluster.name
+  task_definition_arn               = module.task_definition_app.arn
+  desired_count                     = var.desired_count
+  health_check_grace_period_seconds = 180
+
+  network_configuration = {
+    subnets         = module.private_app_subnets.ids
+    security_groups = [module.security_group_app.id]
+  }
+  load_balancer = {
+    target_group_arn = module.elb.target_group_arn
+    container_name   = var.app_container_name
+    container_port   = var.app_container_port
+  }
+  capacity_provider_strategy = [
+    {
+      capacity_provider = local.default_cas_name
+      base              = 0
+      weight            = 1
+    },
+  ]
+  ordered_placement_strategy = [
+    {
+      type  = "spread"
+      field = "attribute:ecs.availability-zone"
+    },
+    {
+      type  = "binpack"
+      field = "memory"
+    }
+  ]
+  service_connect_configuration = {
+    namespace = module.cluster_namespace.arn
+  }
+}
+
+module "task_definition_fluentbit" {
+  source = "../../modules/ecs/task-definition"
+
+  family                   = "ecs-template-fluentbit-${var.env}"
+  requires_compatibilities = ["EC2"]
+  task_cpu                 = 512
+  task_memory              = 256
+  network_mode             = "awsvpc"
+  container_name           = var.fluentbit_container_name
+  repository_url           = module.ecr_fluentbit.repository_url
+  container_cpu            = 256
+  container_memory         = 128
+  port_mappings = [
+    {
+      hostPort      = var.fluentbit_container_port
+      containerPort = var.fluentbit_container_port
+      name          = "fluentbit"
+      appProtocol   = "http"
+    }
+  ]
+  environment = [
+    {
+      name  = "env"
+      value = var.env
+    }
+  ]
+}
+
+module "ecs_service_fluentbit" {
+  source = "../../modules/ecs/service"
+
+  service_name        = "ecs-service-fluentbit-${var.env}"
+  cluster_name        = module.ecs_cluster.name
+  task_definition_arn = module.task_definition_fluentbit.arn
+  launch_type         = "EC2"
+  scheduling_strategy = "DAEMON"
+  network_configuration = {
+    subnets         = module.private_app_subnets.ids
+    security_groups = [module.security_group_fluentbit.id]
+  }
+  service_connect_configuration = {
+    namespace = module.cluster_namespace.arn
+    service = {
+      port_name = "fluentbit"
+      client_alias = {
+        port = var.fluentbit_container_port
+      }
+    }
+  }
 }
 
 ### ELB
 module "elb" {
   source = "../../modules/elb"
 
-  elb_name           = "elb-${var.env}"
-  subnets            = module.public_subnets.ids
-  security_groups    = [module.security_group_default.id]
-  target_group_name  = "tg-${var.env}"
-  target_port        = 8080
-  vpc_id             = module.vpc.vpc_id
-  health_check_port  = 8081
-  ping_path          = "/actuator/health"
-  certificate_domain = var.acm_domain
+  elb_name             = "elb-${var.env}"
+  subnets              = module.public_subnets.ids
+  security_groups      = [module.security_group_default.id]
+  target_group_name    = "tg-${var.env}"
+  target_type          = "ip"
+  target_port          = var.app_container_port
+  vpc_id               = module.vpc.vpc_id
+  deregistration_delay = 60
+  health_check_port    = var.app_container_health_check_port
+  ping_path            = "/actuator/health"
+  certificate_domain   = var.acm_domain
 }
 
 ### Route53
@@ -324,103 +446,103 @@ module "route53" {
   api_zone_id         = module.elb.zone_id
 }
 
-### Kinesis
-module "kinesis_client_log" {
-  source = "../../modules/kinesis"
+# ### Kinesis
+# module "kinesis_client_log" {
+#   source = "../../modules/kinesis"
 
-  name        = "kn-client-log-${var.env}"
-  shard_count = 1
-}
+#   name        = "kn-client-log-${var.env}"
+#   shard_count = 1
+# }
 
-module "kinesis_server_log" {
-  source = "../../modules/kinesis"
+# module "kinesis_server_log" {
+#   source = "../../modules/kinesis"
 
-  name        = "kn-server-log-${var.env}"
-  shard_count = 1
-}
+#   name        = "kn-server-log-${var.env}"
+#   shard_count = 1
+# }
 
-module "kinesis_notification" {
-  source = "../../modules/kinesis"
+# module "kinesis_notification" {
+#   source = "../../modules/kinesis"
 
-  name        = "kn-notification-${var.env}"
-  shard_count = 1
-}
+#   name        = "kn-notification-${var.env}"
+#   shard_count = 1
+# }
 
-### Firehose
-module "firehose_client_log_s3" {
-  source = "../../modules/firehose"
+# ### Firehose
+# module "firehose_client_log_s3" {
+#   source = "../../modules/firehose"
 
-  name               = "fh-client-log-s3-stream-${var.env}"
-  destination        = "extended_s3"
-  kinesis_stream_arn = module.kinesis_client_log.arn
-  configuration = {
-    extended_s3 = {
-      bucket_arn         = module.s3_client_log.arn
-      buffering_interval = 300
-    }
-  }
-}
+#   name               = "fh-client-log-s3-stream-${var.env}"
+#   destination        = "extended_s3"
+#   kinesis_stream_arn = module.kinesis_client_log.arn
+#   configuration = {
+#     extended_s3 = {
+#       bucket_arn         = module.s3_client_log.arn
+#       buffering_interval = 300
+#     }
+#   }
+# }
 
-module "firehose_client_log_opensearch" {
-  source = "../../modules/firehose"
+# module "firehose_client_log_opensearch" {
+#   source = "../../modules/firehose"
 
-  name               = "fh-client-log-opensearch-stream-${var.env}"
-  destination        = "opensearch"
-  kinesis_stream_arn = module.kinesis_client_log.arn
-  configuration = {
-    opensearch = {
-      bucket_arn         = module.s3_client_log.arn
-      buffering_interval = 300
-      domain_arn         = module.log_opensearch.arn
-      index_name         = "client-log"
-      s3_backup_mode     = "FailedDocumentsOnly"
-    }
-  }
-}
+#   name               = "fh-client-log-opensearch-stream-${var.env}"
+#   destination        = "opensearch"
+#   kinesis_stream_arn = module.kinesis_client_log.arn
+#   configuration = {
+#     opensearch = {
+#       bucket_arn         = module.s3_client_log.arn
+#       buffering_interval = 300
+#       domain_arn         = module.log_opensearch.arn
+#       index_name         = "client-log"
+#       s3_backup_mode     = "FailedDocumentsOnly"
+#     }
+#   }
+# }
 
-module "firehose_server_log_s3" {
-  source = "../../modules/firehose"
+# module "firehose_server_log_s3" {
+#   source = "../../modules/firehose"
 
-  name               = "fh-server-log-s3-stream-${var.env}"
-  destination        = "extended_s3"
-  kinesis_stream_arn = module.kinesis_server_log.arn
-  configuration = {
-    extended_s3 = {
-      bucket_arn         = module.s3_server_log.arn
-      buffering_interval = 300
-    }
-  }
-}
+#   name               = "fh-server-log-s3-stream-${var.env}"
+#   destination        = "extended_s3"
+#   kinesis_stream_arn = module.kinesis_server_log.arn
+#   configuration = {
+#     extended_s3 = {
+#       bucket_arn         = module.s3_server_log.arn
+#       buffering_interval = 300
+#     }
+#   }
+# }
 
-module "firehose_server_log_opensearch" {
-  source = "../../modules/firehose"
+# module "firehose_server_log_opensearch" {
+#   source = "../../modules/firehose"
 
-  name               = "fh-server-log-opensearch-stream-${var.env}"
-  destination        = "opensearch"
-  kinesis_stream_arn = module.kinesis_server_log.arn
-  configuration = {
-    opensearch = {
-      bucket_arn         = module.s3_server_log.arn
-      buffering_interval = 300
-      domain_arn         = module.log_opensearch.arn
-      index_name         = "server-log"
-      s3_backup_mode     = "FailedDocumentsOnly"
-    }
-  }
-}
+#   name               = "fh-server-log-opensearch-stream-${var.env}"
+#   destination        = "opensearch"
+#   kinesis_stream_arn = module.kinesis_server_log.arn
+#   configuration = {
+#     opensearch = {
+#       bucket_arn         = module.s3_server_log.arn
+#       buffering_interval = 300
+#       domain_arn         = module.log_opensearch.arn
+#       index_name         = "server-log"
+#       s3_backup_mode     = "FailedDocumentsOnly"
+#     }
+#   }
+# }
 
-### OpenSearch
-module "log_opensearch" {
-  source = "../../modules/opensearch"
+# ### OpenSearch
+# module "log_opensearch" {
+#   source = "../../modules/opensearch"
 
-  name                 = "os-log-${var.env}"
-  instance_type        = var.instance_type
-  instance_count       = 1
-  ebs_enabled          = true
-  volume_size          = 20
-  master_user_name     = var.master_user_name
-  master_user_password = var.master_user_password
-}
+#   name                 = "os-log-${var.env}"
+#   instance_type        = var.instance_type
+#   instance_count       = 1
+#   ebs_enabled          = true
+#   volume_size          = 20
+#   master_user_name     = var.master_user_name
+#   master_user_password = var.master_user_password
+# }
 
 ### EC2
 module "mongo-primary" {
@@ -479,29 +601,29 @@ module "rds" {
   parameter_group_name  = "rds-pg-${var.env}"
 }
 
-### Lambda
-module "notification_lambda" {
-  source = "../../modules/lambda"
+# ### Lambda
+# module "notification_lambda" {
+#   source = "../../modules/lambda"
 
-  role_name              = "notification-lambda-role"
-  layer_names            = ["fcm_layer"]
-  dir                    = true
-  dir_path               = "../../function/notification/"
-  zip_path               = "../../function/notification.zip"
-  function_name          = "notification-lambda-${var.env}"
-  handler_name           = "notification.lambda_handler"
-  environment            = var.notification_environment
-  create_kinesis_trigger = true
-  kinesis_arn            = module.kinesis_notification.arn
-}
+#   role_name              = "notification-lambda-role"
+#   layer_names            = ["fcm_layer"]
+#   dir                    = true
+#   dir_path               = "../../function/notification/"
+#   zip_path               = "../../function/notification.zip"
+#   function_name          = "notification-lambda-${var.env}"
+#   handler_name           = "notification.lambda_handler"
+#   environment            = var.notification_environment
+#   create_kinesis_trigger = true
+#   kinesis_arn            = module.kinesis_notification.arn
+# }
 
-### Log group
-module "notification_lambda_log_goup" {
-  source = "../../modules/cloudwatch"
+# ### Log group
+# module "notification_lambda_log_goup" {
+#   source = "../../modules/cloudwatch"
 
-  log_group_name = "/aws/lambda/${module.notification_lambda.function_name}"
-  retention_days = 3
-}
+#   log_group_name = "/aws/lambda/${module.notification_lambda.function_name}"
+#   retention_days = 3
+# }
 
 ### ElastiCache
 module "elasticache_redis" {
@@ -517,4 +639,32 @@ module "elasticache_redis" {
   user_id               = var.user_id
   user_name             = var.user_name
   passwords             = var.passwords
+}
+
+### Launch Template
+module "launch_template" {
+  source = "../../modules/ec2/launch-template"
+
+  ecs_cluster_name = module.ecs_cluster.name
+  ec2_role_name    = "ecs-ec2-role"
+  profile_name     = "ecs-app-instance-profile-${var.env}"
+  template_name    = "ecs-app-instance-launch-template-${var.env}"
+  image_id         = "ami-0c1ffd9e3d9b0f4af" # ecs optimized AMI arm64
+  instance_type    = var.launch_template_instance_type
+  key_name         = module.key_pair.name
+  ebs_tag_name     = "ebs-ecs-instance-${var.env}"
+}
+
+### Auto Scaling Group
+module "asg_default" {
+  source = "../../modules/ec2/auto-scaling-group"
+
+  name                = "asg-default-${var.env}"
+  desired_capacity    = 0
+  max_size            = 10
+  min_size            = 0
+  vpc_zone_identifier = module.private_app_subnets.ids
+  launch_template_id  = module.launch_template.id
+  instance_name       = "${module.ecs_cluster.name}-instance"
+  ecs_managed         = true
 }
