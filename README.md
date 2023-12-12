@@ -17,16 +17,16 @@
 
 ## 1. AWS Architecture
 ### 1-1. Architecture Ver.1
-![aws_architecture_v1.0](https://github.com/co-niverse/dangjang-devops/assets/101033262/48bf6619-9c36-4ee1-bf48-005998586cf4)
+![aws_architecture_v1.0](https://github.com/co-niverse/dangjang-devops/assets/101033262/0a4d709d-f319-4517-8977-ddeee41c7a4e)
 
 ### 1-2. Architecture Ver.2
-![aws_architecture_v2.0](https://github.com/co-niverse/dangjang-devops/assets/101033262/c6664a1b-02d5-4ef5-8e46-c2e6ea187ae3)
+![aws_architecture_v2.0](https://github.com/co-niverse/dangjang-devops/assets/101033262/2246302b-758d-477f-b38c-cb4387e61634)
 
 ### 1-3. Architecture Ver.3
-![aws_architecture_v3.0](https://github.com/co-niverse/dangjang-devops/assets/101033262/be70e4b7-22a2-492f-a897-24613611a2e2)
+![aws_architecture_v3.0](https://github.com/co-niverse/dangjang-devops/assets/101033262/61740bd3-50d2-4037-86f1-9b56651d44f4)
 
 ### 1-4. Architecture Ver.4
-![aws_architecture_v4.0](https://github.com/co-niverse/dangjang-devops/assets/101033262/5e6f19d3-5abe-4cea-9016-cb7e5782ba31)
+![aws_architecture_v4.0](https://github.com/co-niverse/dangjang-devops/assets/101033262/898ecbc4-f6f8-40c7-aa20-b05578bc7721)
 
 ## 2. API Server CI/CD Workflow
 
