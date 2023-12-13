@@ -29,6 +29,6 @@
 ![aws_architecture_v4.0](https://github.com/co-niverse/dangjang-devops/assets/101033262/9afde7ac-3b69-44c1-a56b-a2fbb3950ac4)
 
 ## 2. API Server CI/CD Workflow
-![server_ci_cd_workflow](https://github.com/co-niverse/dangjang-devops/assets/101033262/3987ac24-ba8f-4573-825b-68df50fea87a)
+![server_ci_cd_workflow](https://github.com/co-niverse/dangjang-devops/assets/101033262/1235a308-c1c3-4a85-b15d-1bc149013d54)
 
 ## 3. ETL Pipeline for Log
