@@ -80,38 +80,10 @@ module "nat_gateway" {
   nat_gateway_name = "nat-gw-${var.env}"
 }
 
-module "security_group_bastion" {
+module "security_group_elb" {
   source = "../../modules/vpc/security_group"
 
-  name   = "bastion-sg-${var.env}"
-  vpc_id = module.vpc.vpc_id
-  ingress = [
-    {
-      from_port   = 22
-      to_port     = 22
-      protocol    = local.tcp
-      cidr_blocks = [local.all_cidr_block]
-    },
-    {
-      from_port   = 80
-      to_port     = 80
-      protocol    = local.tcp
-      cidr_blocks = ["10.${var.cidr_numeral}.0.0/16"]
-    },
-    {
-      from_port   = 443
-      to_port     = 443
-      protocol    = local.tcp
-      cidr_blocks = ["10.${var.cidr_numeral}.0.0/16"]
-    }
-  ]
-  egress = local.egress
-}
-
-module "security_group_default" {
-  source = "../../modules/vpc/security_group"
-
-  name   = "default-sg-${var.env}"
+  name   = "elb-sg-${var.env}"
   vpc_id = module.vpc.vpc_id
   ingress = [
     {
@@ -140,13 +112,13 @@ module "security_group_app" {
       from_port       = var.app_container_port
       to_port         = var.app_container_port
       protocol        = local.tcp
-      security_groups = [module.security_group_default.id]
+      security_groups = [module.security_group_elb.id]
     },
     {
       from_port       = var.app_container_health_check_port
       to_port         = var.app_container_health_check_port
       protocol        = local.tcp
-      security_groups = [module.security_group_default.id]
+      security_groups = [module.security_group_elb.id]
     }
   ]
   egress = local.egress
@@ -216,6 +188,34 @@ module "security_group_cache" {
   egress = local.egress
 }
 
+module "security_group_bastion" {
+  source = "../../modules/vpc/security_group"
+
+  name   = "bastion-sg-${var.env}"
+  vpc_id = module.vpc.vpc_id
+  ingress = [
+    {
+      from_port   = 22
+      to_port     = 22
+      protocol    = local.tcp
+      cidr_blocks = [local.all_cidr_block]
+    },
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = local.tcp
+      cidr_blocks = ["10.${var.cidr_numeral}.0.0/16"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = local.tcp
+      cidr_blocks = ["10.${var.cidr_numeral}.0.0/16"]
+    }
+  ]
+  egress = local.egress
+}
+
 module "security_group_ssh_bastion" {
   source = "../../modules/vpc/security_group"
 
@@ -252,17 +252,198 @@ module "vpc_endpoint_kinesis" {
   endpoint_name    = "kinesis-endpoint-${var.env}"
 }
 
+### Route53
+module "public_zone" {
+  source = "../../modules/route53/zone"
+
+  domain = var.domain
+}
+
+module "elb_record" {
+  source = "../../modules/route53/record"
+
+  zone_id = module.public_zone.zone_id
+  name    = "api.${var.domain}"
+  type    = "A"
+  alias = {
+    name                   = module.elb.dns_name
+    zone_id                = module.elb.zone_id
+    evaluate_target_health = true
+  }
+}
+
+module "private_zone" {
+  source = "../../modules/route53/zone"
+
+  domain = var.domain
+  vpc_id = module.vpc.vpc_id
+}
+
+module "mongo_record" {
+  source = "../../modules/route53/record"
+
+  zone_id = module.private_zone.zone_id
+  name    = "mongo.${var.domain}"
+  type    = "A"
+  records = [module.mongo_primary.private_ip]
+}
+
+module "rds_record" {
+  source = "../../modules/route53/record"
+
+  zone_id = module.private_zone.zone_id
+  name    = "rds.${var.domain}"
+  type    = "CNAME"
+  records = [module.rds.primary_endpoint]
+}
+
+module "cache_record" {
+  source = "../../modules/route53/record"
+
+  zone_id = module.private_zone.zone_id
+  name    = "cache.${var.domain}"
+  type    = "CNAME"
+  records = [module.elasticache_redis.primary_endpoint]
+}
+
+### ACM
+module "acm" {
+  source = "../../modules/acm"
+
+  domain_name               = var.domain
+  subject_alternative_names = ["*.${var.domain}"]
+}
+
+### ELB
+module "elb" {
+  source = "../../modules/elb"
+
+  elb_name             = "elb-${var.env}"
+  subnets              = module.public_subnets.ids
+  security_groups      = [module.security_group_elb.id]
+  target_group_name    = "tg-${var.env}"
+  target_type          = "ip"
+  target_port          = var.app_container_port
+  vpc_id               = module.vpc.vpc_id
+  deregistration_delay = 60
+  health_check_port    = var.app_container_health_check_port
+  ping_path            = "/actuator/health"
+  certificate_domain   = module.acm.certificate_arn
+}
+
+### EC2
+module "mongo_primary" {
+  source = "../../modules/ec2"
+
+  instance_type         = var.mongo_instance_type
+  key_name              = module.key_pair.name
+  subnet_id             = module.private_db_subnets.ids[0]
+  security_group_ids    = [module.security_group_mongo.id, module.security_group_ssh_bastion.id]
+  delete_on_termination = false
+  volume_size           = 20
+  ebs_name              = "ebs-mongo-primary-${var.env}"
+  instance_name         = "mongo-primary-${var.env}"
+}
+
+module "bastion" {
+  source = "../../modules/ec2"
+
+  ami                = "ami-0c2d3e23e757b5d84" # NAT Instance
+  instance_type      = var.bastion_instance_type
+  key_name           = module.key_pair.name
+  pulic_ip_enabled   = true
+  subnet_id          = module.public_subnets.ids[0]
+  security_group_ids = [module.security_group_bastion.id]
+  source_dest_check  = false
+  volume_type        = "standard"
+  ebs_name           = "ebs-bastion-${var.env}"
+  instance_name      = "bastion-${var.env}"
+}
+
+module "key_pair" {
+  source = "../../modules/ec2/key-pair"
+
+  key_name        = "${var.env}-server-key-pair"
+  public_key_path = "../../public-key-pair/${var.env}.txt"
+}
+
+### Launch Template
+module "launch_template" {
+  source = "../../modules/ec2/launch-template"
+
+  ecs_cluster_name = module.ecs_cluster.name
+  ec2_role_name    = "ecs-ec2-role"
+  profile_name     = "ecs-app-instance-profile-${var.env}"
+  template_name    = "ecs-app-instance-launch-template-${var.env}"
+  image_id         = "ami-0c1ffd9e3d9b0f4af" # ecs optimized AMI arm64
+  instance_type    = var.launch_template_instance_type
+  key_name         = module.key_pair.name
+  vpc_security_group_ids = [module.security_group_ssh_bastion.id]
+  ebs_tag_name     = "ebs-ecs-instance-${var.env}"
+}
+
+### Auto Scaling Group
+module "asg_default" {
+  source = "../../modules/ec2/auto-scaling-group"
+
+  name                = "asg-default-${var.env}"
+  desired_capacity    = 0
+  max_size            = 10
+  min_size            = 0
+  vpc_zone_identifier = module.private_app_subnets.ids
+  launch_template_id  = module.launch_template.id
+  instance_name       = "${module.ecs_cluster.name}-instance"
+  ecs_managed         = true
+}
+
+### RDS
+module "rds" {
+  source = "../../modules/rds"
+
+  primary_instance_name = "rds-primary-${var.env}"
+  storage_size          = 50
+  instance_class        = var.rds_instance_type
+  multi_az              = false
+  username              = var.rds_username
+  password              = var.rds_password
+  db_name               = var.env
+  security_group_ids    = [module.security_group_rds.id]
+  create_replica        = false
+  replica_instance_name = "rds-replica-${var.env}"
+  create_snapshot       = false
+  snapshot_name         = "rds-snapshot-${var.env}"
+  subnet_group_name     = "rds-sg-${var.env}"
+  subnet_ids            = module.private_db_subnets.ids
+  parameter_group_name  = "rds-pg-${var.env}"
+}
+
+### ElastiCache
+module "elasticache_redis" {
+  source = "../../modules/elasticache"
+
+  group_id              = "redis-group-${var.env}"
+  preffered_cluster_azs = [for i in range(var.num_cache_clusters) : element(var.availability_zones, i)]
+  node_type             = var.node_type
+  num_cache_clusters    = var.num_cache_clusters
+  security_group_ids    = [module.security_group_cache.id]
+  subnet_group_name     = "redis-subnet-group-${var.env}"
+  subnet_ids            = module.private_db_subnets.ids
+  user_id               = var.user_id
+  user_name             = var.user_name
+  passwords             = var.passwords
+}
+
 ### S3
 module "s3_client_log" {
   source = "../../modules/s3"
 
-  bucket_name = "dangjang.client.log-${var.env}"
+  bucket_name = "${var.env}.client-log.dangjang"
 }
 
 module "s3_server_log" {
   source = "../../modules/s3"
 
-  bucket_name = "dangjang.server.log-${var.env}"
+  bucket_name = "${var.env}.server-log.dangjang"
 }
 
 # module "s3_user_image" {
@@ -275,13 +456,15 @@ module "s3_server_log" {
 module "ecr_app" {
   source = "../../modules/ecr"
 
-  name = var.env
+  name        = "app-${var.env}"
+  identifiers = var.users
 }
 
 module "ecr_fluentbit" {
   source = "../../modules/ecr"
 
-  name = "fluentbit-${var.env}"
+  name        = "fluentbit-${var.env}"
+  identifiers = var.users
 }
 
 ### ECS
@@ -419,37 +602,6 @@ module "ecs_service_fluentbit" {
   }
 }
 
-### ELB
-module "elb" {
-  source = "../../modules/elb"
-
-  elb_name             = "elb-${var.env}"
-  subnets              = module.public_subnets.ids
-  security_groups      = [module.security_group_default.id]
-  target_group_name    = "tg-${var.env}"
-  target_type          = "ip"
-  target_port          = var.app_container_port
-  vpc_id               = module.vpc.vpc_id
-  deregistration_delay = 60
-  health_check_port    = var.app_container_health_check_port
-  ping_path            = "/actuator/health"
-  certificate_domain   = var.acm_domain
-}
-
-### Route53
-module "route53" {
-  source = "../../modules/route53"
-
-  create_private_zone = var.create_private_zone
-  vpc_id              = module.vpc.vpc_id
-  domain              = var.domain
-  mongo_private_ip    = module.mongo-primary.private_ip
-  rds_endpoint        = module.rds.primary_endpoint
-  cache_endpoint      = module.elasticache_redis.primary_endpoint
-  api_dns_name        = module.elb.dns_name
-  api_zone_id         = module.elb.zone_id
-}
-
 # ### Kinesis
 # module "kinesis_client_log" {
 #   source = "../../modules/kinesis"
@@ -548,63 +700,6 @@ module "route53" {
 #   master_user_password = var.master_user_password
 # }
 
-### EC2
-module "mongo-primary" {
-  source = "../../modules/ec2"
-
-  instance_type      = var.mongo_instance_type
-  key_name           = module.key_pair.name
-  subnet_id          = module.private_db_subnets.ids[0]
-  security_group_ids = [module.security_group_mongo.id, module.security_group_ssh_bastion.id]
-  volume_size        = 20
-  ebs_tag_name       = "ebs_mongodb-primary-${var.env}"
-  tag_name           = "mongodb-primary-${var.env}"
-}
-
-module "bastion" {
-  source = "../../modules/ec2"
-
-  ami                = "ami-0c2d3e23e757b5d84" # NAT Instance
-  instance_type      = var.bastion_instance_type
-  key_name           = module.key_pair.name
-  pulic_ip_enabled   = true
-  subnet_id          = module.public_subnets.ids[0]
-  security_group_ids = [module.security_group_bastion.id]
-  source_dest_check  = false
-  device_name        = "/dev/xvda"
-  volume_type        = "standard"
-  ebs_tag_name       = "ebs_bastion-${var.env}"
-  tag_name           = "bastion-${var.env}"
-}
-
-module "key_pair" {
-  source = "../../modules/ec2/key-pair"
-
-  key_name        = "${var.env}-server-key-pair"
-  public_key_path = "../../public-key-pair/${var.env}.txt"
-}
-
-### RDS
-module "rds" {
-  source = "../../modules/rds"
-
-  primary_instance_name = "rds-primary-${var.env}"
-  storage_size          = 50
-  instance_class        = var.rds_instance_type
-  multi_az              = false
-  username              = var.rds_username
-  password              = var.rds_password
-  db_name               = var.env
-  security_group_ids    = [module.security_group_rds.id]
-  create_replica        = false
-  replica_instance_name = "rds-replica-${var.env}"
-  create_snapshot       = false
-  snapshot_name         = "rds-snapshot-${var.env}"
-  subnet_group_name     = "rds-sg-${var.env}"
-  subnet_ids            = module.private_db_subnets.ids
-  parameter_group_name  = "rds-pg-${var.env}"
-}
-
 # ### Lambda
 # module "notification_lambda" {
 #   source = "../../modules/lambda"
@@ -628,48 +723,3 @@ module "rds" {
 #   log_group_name = "/aws/lambda/${module.notification_lambda.function_name}"
 #   retention_days = 3
 # }
-
-### ElastiCache
-module "elasticache_redis" {
-  source = "../../modules/elasticache"
-
-  group_id              = "redis-group-${var.env}"
-  preffered_cluster_azs = [for i in range(var.num_cache_clusters) : element(var.availability_zones, i)]
-  node_type             = var.node_type
-  num_cache_clusters    = var.num_cache_clusters
-  security_group_ids    = [module.security_group_cache.id]
-  subnet_group_name     = "redis-subnet-group-${var.env}"
-  subnet_ids            = module.private_db_subnets.ids
-  user_id               = var.user_id
-  user_name             = var.user_name
-  passwords             = var.passwords
-}
-
-### Launch Template
-module "launch_template" {
-  source = "../../modules/ec2/launch-template"
-
-  ecs_cluster_name = module.ecs_cluster.name
-  ec2_role_name    = "ecs-ec2-role"
-  profile_name     = "ecs-app-instance-profile-${var.env}"
-  template_name    = "ecs-app-instance-launch-template-${var.env}"
-  image_id         = "ami-0c1ffd9e3d9b0f4af" # ecs optimized AMI arm64
-  instance_type    = var.launch_template_instance_type
-  key_name         = module.key_pair.name
-  vpc_security_group_ids = [module.security_group_ssh_bastion.id]
-  ebs_tag_name     = "ebs-ecs-instance-${var.env}"
-}
-
-### Auto Scaling Group
-module "asg_default" {
-  source = "../../modules/ec2/auto-scaling-group"
-
-  name                = "asg-default-${var.env}"
-  desired_capacity    = 0
-  max_size            = 10
-  min_size            = 0
-  vpc_zone_identifier = module.private_app_subnets.ids
-  launch_template_id  = module.launch_template.id
-  instance_name       = "${module.ecs_cluster.name}-instance"
-  ecs_managed         = true
-}

@@ -11,6 +11,10 @@ variable "env" {
   type = string
 }
 
+variable "users" {
+  type = list(string)
+}
+
 ### VPC
 variable "cidr_numeral" {
   type = string
@@ -31,10 +35,6 @@ variable "cidr_numeral_private_db" {
 ### Route53
 variable "domain" {
   type = string
-}
-
-variable "create_private_zone" {
-  type = bool
 }
 
 ### ECS
@@ -59,11 +59,6 @@ variable "fluentbit_container_port" {
 }
 
 variable "fluentbit_container_name" {
-  type = string
-}
-
-### ELB
-variable "acm_domain" {
   type = string
 }
 
