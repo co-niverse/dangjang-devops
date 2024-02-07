@@ -36,7 +36,7 @@ resource "aws_elasticache_user" "redis" {
   access_string = var.access_string
   engine        = upper(var.engine)
 
-  authentication_mode { # 인증 모드
+  authentication_mode {
     type      = "password"
     passwords = var.passwords
   }
