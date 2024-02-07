@@ -15,7 +15,7 @@ locals {
 
 ### VPC
 module "vpc" {
-  source = "../../modules/vpc"
+  source = "../../modules/vpc/vpc"
 
   vpc_name     = "vpc-${var.env}"
   igw_name     = "igw-${var.env}"
@@ -333,7 +333,7 @@ module "elb" {
 
 ### EC2
 module "mongo_primary" {
-  source = "../../modules/ec2"
+  source = "../../modules/ec2/instance"
 
   instance_type         = var.mongo_instance_type
   key_name              = module.key_pair.name
@@ -346,7 +346,7 @@ module "mongo_primary" {
 }
 
 module "bastion" {
-  source = "../../modules/ec2"
+  source = "../../modules/ec2/instance"
 
   ami                = "ami-0c2d3e23e757b5d84" # NAT Instance
   instance_type      = var.bastion_instance_type
@@ -469,7 +469,7 @@ module "ecr_fluentbit" {
 
 ### ECS
 module "ecs_cluster" {
-  source = "../../modules/ecs"
+  source = "../../modules/ecs/cluster"
 
   cluster_name  = "ecs-cluster-${var.env}"
   namespace_arn = module.cluster_namespace.arn
