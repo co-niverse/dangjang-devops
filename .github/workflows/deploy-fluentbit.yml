@@ -1,9 +1,12 @@
+name: Deploy to AWS
+
 on:
   push:
     branches:
       - main
     paths:
       - 'fluentbit/**'
+      - '.github/workflows/**'
 
 env:
   ECR_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
@@ -16,34 +19,14 @@ env:
   TAG: latest
 
 jobs:
-  aws-config:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./fluentbit
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ap-northeast-2
-      
-    - name: login to ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-      with:
-        mask-password: 'false'
-  
   deploy-dev:
     runs-on: ubuntu-latest
     env:
       working-directory: ./fluentbit
-    needs: aws-config
     steps:
+    - name: Configure aws
+      uses: ./.github/workflows/aws-config.yml
+
     - name: Build and push image to Amazon ECR
       run: |
         docker build -t ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }} .
@@ -66,8 +49,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       working-directory: ./fluentbit
-    needs: aws-config
     steps:
+    - name: Configure aws
+      uses: ./.github/workflows/aws-config.yml
+
     - name: Build and push image to Amazon ECR
       run: |
         docker build -t ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }} .
