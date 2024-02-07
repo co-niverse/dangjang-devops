@@ -19,17 +19,33 @@ env:
   TAG: latest
 
 jobs:
+  login-ecr:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-2
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      with:
+        mask-password: 'true'
+
   deploy-dev:
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: Push image to Amazon ECR
-      uses: ./.github/workflows/push-image.yml
-      with:
-        uri: ${{ env.ENDPOINT }}/${{ env.DEV_REPO }}:${{ env.TAG }}
-        working-directory: ./fluentbit
+    - name: Build and push image to Amazon ECR
+      run: |
+        docker build -t ${{ env.ENDPOINT }}/${{ env.DEV_REPO }}:${{ env.TAG }} .
+        docker push ${{ env.ENDPOINT }}/${{ env.DEV_REPO }}:${{ env.TAG }}
+      working-directory: ./fluentbit
 
     - name: Pull image from Amazon ECR and restart container in EC2
       uses: appleboy/ssh-action@master
@@ -47,7 +63,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Build and push image to Amazon ECR
+      run: |
+        docker build -t ${{ env.ENDPOINT }}/${{ env.PROD_REPO }}:${{ env.TAG }} .
+        docker push ${{ env.ENDPOINT }}/${{ env.PROD_REPO }}:${{ env.TAG }}
+      working-directory: ./fluentbit
 
     - name: Push image to Amazon ECR
       uses: ./.github/workflows/push-image.yml
