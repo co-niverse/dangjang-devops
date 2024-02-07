@@ -42,19 +42,13 @@ resource "aws_alb_target_group" "default" {
   }
 }
 
-# 활성화된 도메인 인증서 가져오기
-data "aws_acm_certificate" "acm" {
-  domain   = var.certificate_domain
-  statuses = ["ISSUED"]
-}
-
 # ELB listener
 resource "aws_alb_listener" "default" {
   load_balancer_arn = aws_lb.default.arn
   port              = var.listener_port
   protocol          = var.listener_protocol
   ssl_policy        = var.ssl_policy
-  certificate_arn   = data.aws_acm_certificate.acm.arn
+  certificate_arn   = var.certificate_domain
 
   default_action {
     type             = "forward"
