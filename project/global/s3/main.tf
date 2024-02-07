@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "tfstate" {
-  bucket = "dangjang.tfstate"
+  bucket = "dangjang-tfstate"
 }
 
 resource "aws_s3_bucket_versioning" "tfstate" {

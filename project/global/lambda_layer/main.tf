@@ -1,7 +1,3 @@
-###################
-#  Lambda Layer   #
-###################
-
 locals {
   fcm_layer_dir_path = "../../function/layer/firebase_admin/"
   fcm_layer_zip_path = "../../function/layer/firebase_admin.zip"
