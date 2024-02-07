@@ -14,7 +14,7 @@ env:
   ECS_SERVICE: ${{ secrets.ECS_SERVICE_NAME }}-prod
   ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_NAME }}-prod
   TAG: latest
-  WORKING_DIRECTORY: ./fluentbit
+  WORKING_DIRECTORY: fluentbit
 
 jobs:
   aws-config:
