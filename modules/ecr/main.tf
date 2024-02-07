@@ -11,7 +11,7 @@ data "aws_iam_policy_document" "policy" {
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::503792100451:user/teo", "arn:aws:iam::503792100451:user/eve"]
+      identifiers = var.identifiers
     }
 
     actions = [

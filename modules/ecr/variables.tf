@@ -2,6 +2,11 @@
 #       ECR       #
 ###################
 
+variable "identifiers" {
+  description = "ECR에 접근할 수 있는 사용자"
+  type        = list(string)
+}
+
 variable "image_count" {
   description = "보관할 이미지 개수"
   type        = number
