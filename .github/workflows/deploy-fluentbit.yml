@@ -9,7 +9,7 @@ on:
       - '.github/workflows/**'
 
 env:
-  ECR_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
+  ENDPOINT: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
   DEV_REPO: ${{ secrets.DEV_FLUENTBIT_ECR_REPOSITORY }}
   PROD_REPO: ${{ secrets.PROD_FLUENTBIT_ECR_REPOSITORY }}
   TASK_DEFINITION: ${{ secrets.TASK_DEFINITION_NAME }}-prod
@@ -21,17 +21,15 @@ env:
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
-    env:
-      working-directory: ./fluentbit
     steps:
-    - name: Configure aws
-      uses: ./.github/workflows/aws-config.yml
+    - name: Check out code
+      uses: actions/checkout@v3
 
-    - name: Build and push image to Amazon ECR
-      run: |
-        docker build -t ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }} .
-        docker push ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }}
-      working-directory: ${{ env.working-directory }}
+    - name: Push image to Amazon ECR
+      uses: ./.github/workflows/push-image.yml
+      with:
+        uri: ${{ env.ENDPOINT }}/${{ env.DEV_REPO }}:${{ env.TAG }}
+        working-directory: ./fluentbit
 
     - name: Pull image from Amazon ECR and restart container in EC2
       uses: appleboy/ssh-action@master
@@ -40,24 +38,22 @@ jobs:
         host: ${{ secrets.DEV_SERVER_HOST }}
         username: ${{ secrets.DEV_SERVER_USER }}
         script: |
-          docker login -u AWS -p $(aws ecr get-login-password --region ap-northeast-2) ${{ env.ECR_URI }}
-          docker pull ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }}
+          docker login -u AWS -p $(aws ecr get-login-password --region ap-northeast-2) ${{ env.ENDPOINT }}
+          docker pull ${{ env.ENDPOINT }}/${{ env.DEV_REPO }}:${{ env.TAG }}
           docker stop fluentbit-dev && docker rm fluentbit-dev
-          docker run -d --name fluentbit-dev -p 8888:8888 --network dev-network -e env=dev ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }}
-  
+          docker run -d --name fluentbit-dev -p 8888:8888 --network dev-network -e env=dev ${{ env.ENDPOINT }}/${{ env.DEV_REPO }}:${{ env.TAG }}
+
   deploy-prod:
     runs-on: ubuntu-latest
-    env:
-      working-directory: ./fluentbit
     steps:
-    - name: Configure aws
-      uses: ./.github/workflows/aws-config.yml
+    - name: Check out code
+      uses: actions/checkout@v3
 
-    - name: Build and push image to Amazon ECR
-      run: |
-        docker build -t ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }} .
-        docker push ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }}
-      working-directory: ${{ env.working-directory }}
+    - name: Push image to Amazon ECR
+      uses: ./.github/workflows/push-image.yml
+      with:
+        uri: ${{ env.ENDPOINT }}/${{ env.PROD_REPO }}:${{ env.TAG }}
+        working-directory: ./fluentbit
 
     - name: Download task definition
       run: |
@@ -69,7 +65,7 @@ jobs:
       with:
         task-definition: task-definition.json
         container-name: ${{ env.ECS_CONTAINER }}
-        image: ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }}
+        image: ${{ env.ENDPOINT }}/${{ env.PROD_REPO }}:${{ env.TAG }}
 
     - name: Deploy Amazon ECS task definition
       id: deploy
