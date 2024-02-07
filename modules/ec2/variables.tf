@@ -40,10 +40,10 @@ variable "source_dest_check" {
   default     = true
 }
 
-variable "device_name" {
-  description = "마운트할 디바이스 이름"
-  type        = string
-  default     = "/dev/sda1"
+variable "delete_on_termination" {
+  description = "인스턴스 삭제 시 EBS 볼륨 삭제 여부"
+  type        = bool
+  default     = true
 }
 
 variable "volume_type" {
@@ -58,12 +58,12 @@ variable "volume_size" {
   default     = 8
 }
 
-variable "ebs_tag_name" {
-  description = "EBS 볼륨 태그 이름"
+variable "ebs_name" {
+  description = "EBS 볼륨 이름"
   type        = string
 }
 
-variable "tag_name" {
-  description = "할당할 인스턴스 태그 이름"
+variable "instance_name" {
+  description = "인스턴스 이름"
   type        = string
 }

@@ -10,18 +10,18 @@ resource "aws_instance" "instance" {
 
   subnet_id              = var.subnet_id
   vpc_security_group_ids = var.security_group_ids
-  source_dest_check = var.source_dest_check
+  source_dest_check      = var.source_dest_check
 
-  ebs_block_device {
-    device_name = var.device_name
-    volume_type = var.volume_type
-    volume_size = var.volume_size
+  root_block_device {
+    delete_on_termination = var.delete_on_termination
+    volume_type           = var.volume_type
+    volume_size           = var.volume_size
     tags = {
-      Name = var.ebs_tag_name
+      Name = var.ebs_name
     }
   }
 
   tags = {
-    Name = var.tag_name
+    Name = var.instance_name
   }
 }
