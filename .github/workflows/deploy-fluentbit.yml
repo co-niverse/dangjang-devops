@@ -14,11 +14,13 @@ env:
   ECS_SERVICE: ${{ secrets.ECS_SERVICE_NAME }}-prod
   ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_NAME }}-prod
   TAG: latest
-  WORKING_DIRECTORY: fluentbit
 
 jobs:
   aws-config:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fluentbit
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -44,7 +46,6 @@ jobs:
       run: |
         docker build -t ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }} .
         docker push ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }}
-      working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: Pull image from Amazon ECR and restart container in EC2
       uses: appleboy/ssh-action@master
@@ -66,7 +67,6 @@ jobs:
       run: |
         docker build -t ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }} .
         docker push ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }}
-      working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: Download task definition
       run: |
