@@ -6,21 +6,19 @@ on:
       - 'fluentbit/**'
 
 env:
-  AWS_REGION: ap-northeast-2
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-  DEV_ECR_REPOSITORY: ${{ secrets.DEV_FLUENTBIT_ECR_REPOSITORY }}
-  PROD_ECR_REPOSITORY: ${{ secrets.PROD_FLUENTBIT_ECR_REPOSITORY }}
-  TASK_DEFINITION_NAME: ${{ secrets.TASK_DEFINITION_NAME }}-prod
-  ECS_CONTAINER_NAME: ${{ secrets.ECS_FLUENTBIT_CONTAINER_NAME }}
-  ECS_SERVICE_NAME: ${{ secrets.ECS_SERVICE_NAME }}-prod
-  ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME }}-prod
-  IMAGE_TAG: latest
+  ECR_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
+  DEV_REPO: ${{ secrets.DEV_FLUENTBIT_ECR_REPOSITORY }}
+  PROD_REPO: ${{ secrets.PROD_FLUENTBIT_ECR_REPOSITORY }}
+  TASK_DEFINITION: ${{ secrets.TASK_DEFINITION_NAME }}-prod
+  ECS_CONTAINER: ${{ secrets.ECS_FLUENTBIT_CONTAINER_NAME }}
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE_NAME }}-prod
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_NAME }}-prod
+  TAG: latest
+  WORKING_DIRECTORY: ./fluentbit
 
 jobs:
-  deploy-fluentbit:
+  aws-config:
     runs-on: ubuntu-latest
-    env:
-      working-directory: ./fluentbit
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -30,55 +28,63 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+        aws-region: ap-northeast-2
       
     - name: login to ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
       with:
         mask-password: 'false'
-
-    - name: Build and push image to Amazon ECR (dev)
+  
+  deploy-dev:
+    runs-on: ubuntu-latest
+    needs: aws-config
+    steps:
+    - name: Build and push image to Amazon ECR
       run: |
-        docker build -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
-        docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-      working-directory: ${{ env.working-directory }}
+        docker build -t ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }} .
+        docker push ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }}
+      working-directory: ${{ env.WORKING_DIRECTORY }}
 
-    - name: Build and push image to Amazon ECR (prod)
-      run: |
-        docker build -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.PROD_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
-        docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.PROD_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-      working-directory: ${{ env.working-directory }}
-
-    - name: Pull image from Amazon ECR and restart container in EC2 (dev)
+    - name: Pull image from Amazon ECR and restart container in EC2
       uses: appleboy/ssh-action@master
       with:
         key: ${{ secrets.DEV_SERVER_SSH_KEY }}
         host: ${{ secrets.DEV_SERVER_HOST }}
         username: ${{ secrets.DEV_SERVER_USER }}
         script: |
-          docker login -u AWS -p $(aws ecr get-login-password --region ${{ env.AWS_REGION }}) ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-          docker pull ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          docker login -u AWS -p $(aws ecr get-login-password --region ap-northeast-2) ${{ env.ECR_URI }}
+          docker pull ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }}
           docker stop fluentbit-dev && docker rm fluentbit-dev
-          docker run -d --name fluentbit-dev -p 8888:8888 --network dev-network -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} -e env=dev ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-    
+          docker run -d --name fluentbit-dev -p 8888:8888 --network dev-network -e env=dev ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }}
+  
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: aws-config
+    steps:
+    - name: Build and push image to Amazon ECR
+      run: |
+        docker build -t ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }} .
+        docker push ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }}
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+
     - name: Download task definition
       run: |
-        aws ecs describe-task-definition --task-definition ${{ env.TASK_DEFINITION_NAME }} --query taskDefinition > task-definition.json
+        aws ecs describe-task-definition --task-definition ${{ env.TASK_DEFINITION }} --query taskDefinition > task-definition.json
 
-    - name: Fill in the new image ID in the Amazon ECS task definition (prod)
+    - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: task-definition.json
-        container-name: ${{ env.ECS_CONTAINER_NAME }}
-        image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.PROD_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        container-name: ${{ env.ECS_CONTAINER }}
+        image: ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }}
 
     - name: Deploy Amazon ECS task definition
       id: deploy
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE_NAME }}
-        cluster: ${{ env.ECS_CLUSTER_NAME }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
