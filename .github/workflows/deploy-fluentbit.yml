@@ -40,12 +40,15 @@ jobs:
   
   deploy-dev:
     runs-on: ubuntu-latest
+    env:
+      working-directory: ./fluentbit
     needs: aws-config
     steps:
     - name: Build and push image to Amazon ECR
       run: |
         docker build -t ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }} .
         docker push ${{ env.ECR_URI }}/${{ env.DEV_REPO }}:${{ env.TAG }}
+      working-directory: ${{ env.working-directory }}
 
     - name: Pull image from Amazon ECR and restart container in EC2
       uses: appleboy/ssh-action@master
@@ -61,12 +64,15 @@ jobs:
   
   deploy-prod:
     runs-on: ubuntu-latest
+    env:
+      working-directory: ./fluentbit
     needs: aws-config
     steps:
     - name: Build and push image to Amazon ECR
       run: |
         docker build -t ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }} .
         docker push ${{ env.ECR_URI }}/${{ env.PROD_REPO }}:${{ env.TAG }}
+      working-directory: ${{ env.working-directory }}
 
     - name: Download task definition
       run: |
