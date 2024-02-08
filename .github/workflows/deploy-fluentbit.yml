@@ -81,12 +81,6 @@ jobs:
         docker push ${{ env.ENDPOINT }}/${{ env.PROD_REPO }}:${{ env.TAG }}
       working-directory: ./fluentbit
 
-    - name: Push image to Amazon ECR
-      uses: ./.github/workflows/push-image.yml
-      with:
-        uri: ${{ env.ENDPOINT }}/${{ env.PROD_REPO }}:${{ env.TAG }}
-        working-directory: ./fluentbit
-
     - name: Download task definition
       run: |
         aws ecs describe-task-definition --task-definition ${{ env.TASK_DEFINITION }} --query taskDefinition > task-definition.json
