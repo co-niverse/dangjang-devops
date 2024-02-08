@@ -36,6 +36,7 @@ jobs:
         mask-password: 'true'
 
   deploy-dev:
+    needs: login-ecr
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
@@ -60,6 +61,7 @@ jobs:
           docker run -d --name fluentbit-dev -p 8888:8888 --network dev-network -e env=dev ${{ env.ENDPOINT }}/${{ env.DEV_REPO }}:${{ env.TAG }}
 
   deploy-prod:
+    needs: login-ecr
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
