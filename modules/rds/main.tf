@@ -1,6 +1,52 @@
-###################
-#       RDS       #
-###################
+locals {
+  default_parameters = [
+    {
+      name         = "character_set_server"
+      value        = "utf8"
+      apply_method = "immediate"
+    },
+    {
+      name         = "character_set_client"
+      value        = "utf8"
+      apply_method = "immediate"
+    },
+    {
+      name         = "character_set_connection"
+      value        = "utf8"
+      apply_method = "immediate"
+    },
+    {
+      name         = "character_set_database"
+      value        = "utf8"
+      apply_method = "immediate"
+    },
+    {
+      name         = "character_set_results"
+      value        = "utf8"
+      apply_method = "immediate"
+    },
+    {
+      name         = "time_zone"
+      value        = "Asia/Seoul"
+      apply_method = "immediate"
+    },
+    {
+      name         = "collation_connection"
+      value        = "utf8_general_ci"
+      apply_method = "pending-reboot"
+    },
+    {
+      name         = "collation_server"
+      value        = "utf8_general_ci"
+      apply_method = "pending-reboot"
+    },
+    {
+      name         = "lower_case_table_names"
+      value        = "1"
+      apply_method = "pending-reboot"
+    }
+  ]
+}
 
 # RDS instance - Primary
 resource "aws_db_instance" "primary" {
@@ -50,7 +96,6 @@ resource "aws_db_instance" "replica" {
   auto_minor_version_upgrade = var.auto_minor_version_upgrade
 }
 
-# ---------------------------------------------------------
 # RDS Snapshot
 resource "aws_db_snapshot" "rds" {
   count                  = var.create_snapshot ? 1 : 0
@@ -79,7 +124,7 @@ resource "aws_db_parameter_group" "rds" {
   description = "RDS Parameter Group"
 
   dynamic "parameter" {
-    for_each = var.parameters
+    for_each = var.parameters != null ? concat(var.parameters, local.default_parameters) : local.default_parameters
     content {
       name         = parameter.value.name
       value        = parameter.value.value

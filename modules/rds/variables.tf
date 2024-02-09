@@ -1,7 +1,3 @@
-###################
-#       RDS       #
-###################
-
 variable "primary_instance_name" {
   description = "primary 이름"
   type        = string
@@ -132,51 +128,5 @@ variable "parameters" {
     value        = string
     apply_method = string
   }))
-  default = [
-    {
-      name         = "character_set_server"
-      value        = "utf8"
-      apply_method = "immediate"
-    },
-    {
-      name         = "character_set_client"
-      value        = "utf8"
-      apply_method = "immediate"
-    },
-    {
-      name         = "character_set_connection"
-      value        = "utf8"
-      apply_method = "immediate"
-    },
-    {
-      name         = "character_set_database"
-      value        = "utf8"
-      apply_method = "immediate"
-    },
-    {
-      name         = "character_set_results"
-      value        = "utf8"
-      apply_method = "immediate"
-    },
-    {
-      name         = "time_zone"
-      value        = "Asia/Seoul"
-      apply_method = "immediate"
-    },
-    {
-      name         = "collation_connection"
-      value        = "utf8_general_ci"
-      apply_method = "pending-reboot"
-    },
-    {
-      name         = "collation_server"
-      value        = "utf8_general_ci"
-      apply_method = "pending-reboot"
-    },
-    {
-      name         = "lower_case_table_names"
-      value        = "1"
-      apply_method = "pending-reboot"
-    }
-  ]
+  default = null
 }
