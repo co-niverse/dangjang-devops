@@ -1,7 +1,3 @@
-###################
-#       ECS       #
-###################
-
 variable "cluster_name" {
   description = "cluster 이름"
   type        = string

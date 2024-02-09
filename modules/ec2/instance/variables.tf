@@ -1,7 +1,3 @@
-###################
-#       EC2       #
-###################
-
 variable "ami" {
   description = "AMI ID (default: Ubuntu 22.04-arm64 LTS)"
   type        = string

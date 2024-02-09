@@ -1,8 +1,3 @@
-###################
-#       ECR       #
-###################
-
-### Policy
 data "aws_iam_policy_document" "policy" {
   version = "2012-10-17"
   statement {
@@ -32,7 +27,6 @@ resource "aws_ecr_repository_policy" "policy" {
   policy     = data.aws_iam_policy_document.policy.json
 }
 
-### Lifecycle
 resource "aws_ecr_lifecycle_policy" "lifecycle" {
   repository = aws_ecr_repository.repo.name
   policy = jsonencode({
@@ -53,7 +47,6 @@ resource "aws_ecr_lifecycle_policy" "lifecycle" {
   })
 }
 
-### Repository
 resource "aws_ecr_repository" "repo" {
   name                 = var.name
   image_tag_mutability = var.image_tag_mutability

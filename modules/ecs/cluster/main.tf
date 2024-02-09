@@ -1,7 +1,3 @@
-###################
-#       ECS       #
-###################
-
 locals {
   default_capacity_providers = var.enabled_fargate_cas ? ["FARGATE", "FARGATE_SPOT"] : []
 }

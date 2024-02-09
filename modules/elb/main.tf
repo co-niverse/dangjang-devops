@@ -1,7 +1,3 @@
-###################
-#       ELB       #
-###################
-
 # ELB
 resource "aws_lb" "default" {
   name               = var.elb_name
@@ -28,7 +24,7 @@ resource "aws_alb_target_group" "default" {
   vpc_id               = var.vpc_id
   deregistration_delay = var.deregistration_delay
 
-  health_check { # 상태 확인
+  health_check {
     port                = var.health_check_port
     interval            = var.interval
     path                = var.ping_path

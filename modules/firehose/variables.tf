@@ -1,7 +1,3 @@
-###################
-#    Firehose     #
-###################
-
 variable "name" {
   description = "firehose 이름"
   type        = string

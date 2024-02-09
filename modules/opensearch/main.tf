@@ -1,8 +1,3 @@
-###################
-#   OpenSearch    #
-###################
-
-# OpenSearch 도메인 생성
 resource "aws_opensearch_domain" "opensearch" {
   domain_name    = var.name
   engine_version = var.engine_version

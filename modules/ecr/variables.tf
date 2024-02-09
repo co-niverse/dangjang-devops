@@ -1,7 +1,3 @@
-###################
-#       ECR       #
-###################
-
 variable "identifiers" {
   description = "ECR에 접근할 수 있는 사용자"
   type        = list(string)

@@ -1,7 +1,3 @@
-###################
-#   ElastiCache   #
-###################
-
 variable "group_id" {
   description = "replica 그룹 ID"
   type        = string

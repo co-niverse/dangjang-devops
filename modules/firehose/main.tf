@@ -1,7 +1,3 @@
-###################
-#    Firehose     #
-###################
-
 # Firehose role
 data "aws_iam_role" "firehose" {
   name = "firehose-role"

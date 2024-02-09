@@ -1,8 +1,4 @@
-###################
-#   ElastiCache   #
-###################
-
-### replication group
+# replication group
 resource "aws_elasticache_replication_group" "redis" {
   replication_group_id        = var.group_id
   description                 = "Redis replication group"
@@ -22,13 +18,13 @@ resource "aws_elasticache_replication_group" "redis" {
   # user_group_ids              = [aws_elasticache_user_group.redis[0].id]
 }
 
-### subnet group
+# subnet group
 resource "aws_elasticache_subnet_group" "redis" {
   name       = var.subnet_group_name
   subnet_ids = var.subnet_ids
 }
 
-### user
+# user
 resource "aws_elasticache_user" "redis" {
   count         = var.create_user ? 1 : 0
   user_id       = var.user_id
@@ -46,7 +42,7 @@ resource "aws_elasticache_user" "redis" {
   }
 }
 
-### user group
+# user group
 resource "aws_elasticache_user_group" "redis" {
   count         = var.create_user ? 1 : 0
   user_group_id = "${var.user_id}-group"

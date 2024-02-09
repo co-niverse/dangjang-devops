@@ -1,7 +1,3 @@
-###################
-#     Kinesis     #
-###################
-
 resource "aws_kinesis_stream" "stream" {
   name             = var.name
   shard_count      = var.shard_count

@@ -1,7 +1,3 @@
-###################
-#       VPC       #
-###################
-
 variable "vpc_name" {
   description = "vpc 이름"
   type        = string

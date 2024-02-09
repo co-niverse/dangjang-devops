@@ -1,7 +1,3 @@
-###################
-#    CloudWatch   #
-###################
-
 variable "log_group_name" {
   description = "로그 그룹 이름"
   type        = string

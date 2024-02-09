@@ -1,7 +1,3 @@
-###################
-#     Lambda      #
-###################
-
 # role 가져오기
 data "aws_iam_role" "lambda" {
   name = var.role_name

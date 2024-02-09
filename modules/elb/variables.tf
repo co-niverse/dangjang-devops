@@ -1,7 +1,3 @@
-###################
-#       ELB       #
-###################
-
 variable "elb_name" {
   description = "로드밸런서 이름"
   type        = string
@@ -10,7 +6,7 @@ variable "elb_name" {
 variable "internal" {
   description = "내부 로드밸런서 여부"
   type        = bool
-  default = false
+  default     = false
 }
 
 variable "load_balancer_type" {
@@ -21,12 +17,12 @@ variable "load_balancer_type" {
 
 variable "security_groups" {
   description = "로드밸런서 보안그룹"
-  type = list(string)
+  type        = list(string)
 }
 
 variable "subnets" {
   description = "로드밸런서 서브넷"
-  type = list(string)
+  type        = list(string)
 }
 
 variable "target_group_name" {
@@ -53,7 +49,7 @@ variable "target_protocol" {
 
 variable "vpc_id" {
   description = "타겟 그룹을 생성할 VPC ID (required when target_type is instance, ip, alb)"
-  type = string
+  type        = string
 }
 
 variable "deregistration_delay" {
@@ -70,7 +66,7 @@ variable "health_check_port" {
 variable "interval" {
   description = "상태 확인 주기(sec)"
   type        = number
-  default = 300
+  default     = 300
 }
 
 variable "ping_path" {
@@ -83,17 +79,17 @@ variable "matcher" {
   type        = string
   default     = "200"
 }
-  
+
 variable "healthy_threshold" {
   description = "정상 간주 성공 횟수"
   type        = number
-  default = 2
+  default     = 2
 }
 
 variable "unhealthy_threshold" {
   description = "비정상 간주 실패 횟수"
   type        = number
-  default = 2
+  default     = 2
 }
 
 variable "listener_port" {
@@ -116,5 +112,5 @@ variable "ssl_policy" {
 
 variable "certificate_domain" {
   description = "연결할 도메인 인증서"
-  type = string
+  type        = string
 }
